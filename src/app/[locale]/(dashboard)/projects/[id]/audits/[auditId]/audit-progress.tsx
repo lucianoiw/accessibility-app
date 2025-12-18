@@ -29,7 +29,7 @@ interface Props {
 
 const POLL_INTERVAL = 3000 // 3 segundos
 
-export function AuditProgress({ auditId, initialStatus }: Props) {
+export function AuditProgress({ auditId, projectId, initialStatus }: Props) {
   const t = useTranslations('AuditStatus')
   const router = useRouter()
   const [status, setStatus] = useState<AuditStatus | null>(null)
@@ -83,7 +83,8 @@ export function AuditProgress({ auditId, initialStatus }: Props) {
         throw new Error(data.error || 'Erro ao cancelar')
       }
 
-      router.refresh()
+      // Redirecionar para a lista de auditorias do projeto
+      router.push(`/projects/${projectId}`)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao cancelar auditoria')
     } finally {

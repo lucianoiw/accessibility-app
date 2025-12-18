@@ -757,6 +757,21 @@ export const runAuditTask = task({
     // ========================================
     logger.info('Step 5: Finalizando auditoria')
 
+    // Verificar se foi cancelado antes de marcar como COMPLETED
+    const wasCancelled = await checkCancelled()
+    if (wasCancelled) {
+      logger.info('Auditoria foi cancelada, não atualizando para COMPLETED')
+      return {
+        auditId,
+        summary,
+        pagesAudited: state.successfulAudits,
+        pagesRequested: maxPages,
+        brokenPages: state.brokenPages.length,
+        targetReached: false,
+        cancelled: true,
+      }
+    }
+
     // Determinar status final
     const targetReached = state.successfulAudits >= maxPages
 

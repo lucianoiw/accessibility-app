@@ -28,6 +28,7 @@ import {
 } from '@/lib/audit'
 import {
   AlertTriangle,
+  Ban,
   ChevronDown,
   Info,
 } from 'lucide-react'
@@ -198,6 +199,23 @@ export default async function AuditResultsPage({ params }: Props) {
               </p>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 {tFailed('description')}
+              </p>
+              <Button variant="outline" className="mt-4" asChild>
+                <Link href={`/projects/${project.id}`}>{t('backToProject')}</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : audit.status === 'CANCELLED' ? (
+        <Card className="border-gray-200 bg-gray-50 dark:bg-gray-900">
+          <CardContent className="py-8">
+            <div className="text-center space-y-3">
+              <Ban className="w-12 h-12 text-gray-500 mx-auto" />
+              <p className="text-gray-600 dark:text-gray-400 font-medium">
+                {tStatus('cancelled')}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {audit.completed_at && new Date(audit.completed_at).toLocaleString(locale)}
               </p>
               <Button variant="outline" className="mt-4" asChild>
                 <Link href={`/projects/${project.id}`}>{t('backToProject')}</Link>

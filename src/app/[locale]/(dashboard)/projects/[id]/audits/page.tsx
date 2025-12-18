@@ -93,8 +93,8 @@ export default async function ProjectAuditsPage({ params }: Props) {
                       <AuditStatusBadge status={audit.status} tStatus={tStatus} />
                     </div>
 
-                    {/* Violações */}
-                    {audit.summary ? (
+                    {/* Violações ou status */}
+                    {audit.status === 'COMPLETED' && audit.summary ? (
                       <div className="flex items-center gap-4 flex-1">
                         <div className="text-center">
                           <div className="text-2xl font-bold">{audit.summary.total}</div>
@@ -125,6 +125,10 @@ export default async function ProjectAuditsPage({ params }: Props) {
                           )}
                         </div>
                       </div>
+                    ) : audit.status === 'CANCELLED' ? (
+                      <div className="flex-1" />
+                    ) : audit.status === 'FAILED' ? (
+                      <div className="flex-1" />
                     ) : (
                       <div className="flex-1 text-muted-foreground text-sm">
                         {tStatus('waitingStart')}
