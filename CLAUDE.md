@@ -32,7 +32,10 @@ src/
 │   │       └── page.tsx      # Dashboard principal
 │   ├── api/
 │   │   ├── audits/           # API de auditoria (POST inicia, processa em background)
-│   │   │   └── [id]/emag     # API que retorna avaliacao eMAG
+│   │   │   └── [id]/
+│   │   │       ├── status/   # GET polling de status em tempo real
+│   │   │       ├── cancel/   # POST cancelar auditoria via Trigger.dev
+│   │   │       └── emag/     # GET avaliacao eMAG
 │   │   ├── health/           # Health check endpoint
 │   │   ├── projects/[id]/auth/  # Configuracao de autenticacao de sites
 │   │   ├── reports/          # API de relatorios (PDF, etc)
@@ -129,6 +132,16 @@ type BrokenPageErrorType =
   | 'connection_error'  // Erro de conexao (DNS, rede)
   | 'ssl_error'         // Certificado SSL invalido
   | 'other'             // Outros erros
+```
+
+### Campos Importantes da Tabela `audits`
+
+```typescript
+interface Audit {
+  // ... campos padrao ...
+  trigger_run_id: string | null  // ID do run no Trigger.dev (para cancelamento)
+  status: 'PENDING' | 'CRAWLING' | 'AUDITING' | 'AGGREGATING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+}
 ```
 
 ## Regras Customizadas Brasileiras (21 regras base + 6 COGA)
@@ -361,6 +374,19 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 - [x] Retries automaticos para paginas que falham
 - [x] Observabilidade via dashboard Trigger.dev
 - [x] 50k runs/mes gratis, concorrencia ilimitada
+- [x] Machine preset `medium-2x` (2 vCPU, 4 GB RAM) para evitar OOM
+- [x] Cancelamento de auditoria via `runs.cancel()` (Trigger.dev API)
+
+### Cancelamento de Auditoria
+
+- [x] Coluna `trigger_run_id` na tabela `audits` para rastrear run do Trigger.dev
+- [x] API `POST /api/audits/[id]/cancel` para cancelar auditoria em andamento
+- [x] Cancelamento direto via `runs.cancel()` do Trigger.dev SDK
+- [x] Verificacao de status CANCELLED antes de atualizar para COMPLETED
+- [x] Polling de status a cada 3 segundos (`/api/audits/[id]/status`)
+- [x] UI de progresso com botao "Cancelar"
+- [x] Redirecionamento para lista apos cancelamento
+- [x] Card especifico para auditorias canceladas
 
 ### Gestao de Violacoes
 
@@ -1061,6 +1087,58 @@ t('greeting', { name: 'Maria' }) // "Ola, Maria!"
 1. Definir namespace no componente: `useTranslations('NewNamespace')`
 2. Adicionar chaves em `src/messages/pt-BR.json`
 3. Adicionar traducoes em `src/messages/en.json` e `src/messages/es.json`
+
+### Trigger.dev Machine Presets
+
+Para tasks que consomem muita memoria (ex: Playwright), configurar machine preset:
+
+```typescript
+export const runAuditTask = task({
+  id: 'run-audit',
+  machine: { preset: 'medium-2x' }, // 2 vCPU, 4 GB RAM
+  // ...
+})
+```
+
+**Presets disponiveis:**
+
+| Preset | vCPU | RAM | Uso recomendado |
+|--------|------|-----|-----------------|
+| `micro` | 0.25 | 0.25 GB | Tasks simples |
+| `small-1x` | 0.5 | 0.5 GB | Padrao |
+| `small-2x` | 1 | 1 GB | Tasks medias |
+| `medium-1x` | 1 | 2 GB | Playwright basico |
+| `medium-2x` | 2 | 4 GB | **Auditoria (atual)** |
+| `large-1x` | 4 | 8 GB | Sites grandes (100+ paginas) |
+| `large-2x` | 8 | 16 GB | Processamento pesado |
+
+**OOM (Out of Memory)**: Se o task morrer com OOM, aumentar o preset.
+O plano free tem $5/mes de credito, maquinas maiores consomem mais rapido.
+
+### Cancelamento de Tasks Trigger.dev
+
+Para cancelar um task em execucao:
+
+```typescript
+import { runs } from '@trigger.dev/sdk/v3'
+
+// Salvar o run ID ao iniciar
+const handle = await runAuditTask.trigger(payload)
+await supabase.from('audits').update({ trigger_run_id: handle.id })
+
+// Para cancelar depois
+await runs.cancel(triggerRunId)
+```
+
+**Importante**: O task deve verificar se foi cancelado antes de atualizar status final:
+
+```typescript
+// No final do task
+const { data } = await supabase.from('audits').select('status').eq('id', auditId).single()
+if (data?.status === 'CANCELLED') {
+  return { cancelled: true } // NAO sobrescrever para COMPLETED
+}
+```
 
 ### Security Headers (next.config.ts)
 
