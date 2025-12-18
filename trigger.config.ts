@@ -1,4 +1,5 @@
 import { defineConfig } from "@trigger.dev/sdk/v3";
+import { playwright } from "@trigger.dev/build/extensions/playwright";
 
 export default defineConfig({
   project: "proj_lvknvyieavogpfpclxde",
@@ -19,9 +20,13 @@ export default defineConfig({
     },
   },
   dirs: ["./src/trigger"],
-  // Playwright e axe-core tem dependencias que nao podem ser bundled
-  // axe-core precisa ser external para evitar que esbuild adicione __name helper
   build: {
+    // Extensão para instalar Playwright com browsers
+    extensions: [
+      playwright(),
+    ],
+    // Playwright e axe-core tem dependencias que nao podem ser bundled
+    // axe-core precisa ser external para evitar que esbuild adicione __name helper
     external: [
       "playwright",
       "playwright-core",
