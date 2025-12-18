@@ -16,7 +16,6 @@ interface AuditStatus {
   pagesAudited: number
   brokenPagesCount: number
   crawlIterations: number
-  errorMessage: string | null
   createdAt: string
   startedAt: string | null
   completedAt: string | null

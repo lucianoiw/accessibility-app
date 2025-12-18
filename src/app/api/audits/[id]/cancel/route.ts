@@ -55,7 +55,6 @@ export async function POST(request: Request, { params }: Props) {
       .update({
         status: 'CANCELLED',
         completed_at: new Date().toISOString(),
-        error_message: 'Auditoria cancelada pelo usuário',
       } as never)
       .eq('id', id)
 

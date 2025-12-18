@@ -275,6 +275,26 @@ export const runAuditTask = task({
     ) {
       state.currentIteration++
 
+      // Verificar se foi cancelado
+      const { data: auditCheck } = await supabase
+        .from('audits')
+        .select('status')
+        .eq('id', auditId)
+        .single()
+
+      if (auditCheck && (auditCheck as { status: string }).status === 'CANCELLED') {
+        logger.info('Auditoria foi cancelada pelo usuário')
+        return {
+          auditId,
+          summary: { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 },
+          pagesAudited: state.successfulAudits,
+          pagesRequested: maxPages,
+          brokenPages: state.brokenPages.length,
+          targetReached: false,
+          cancelled: true,
+        }
+      }
+
       // Pegar próximo batch de URLs candidatas
       const batchUrls: string[] = []
       while (batchUrls.length < AUDIT_CONFIG.BATCH_SIZE && state.candidateUrls.length > 0) {

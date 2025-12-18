@@ -27,7 +27,6 @@ export async function GET(request: Request, { params }: Props) {
         total_pages,
         broken_pages_count,
         crawl_iterations,
-        error_message,
         created_at,
         started_at,
         completed_at
@@ -36,6 +35,7 @@ export async function GET(request: Request, { params }: Props) {
       .single()
 
     if (error || !audit) {
+      console.error('[Audit Status] Audit not found:', { id, error })
       return NextResponse.json({ error: 'Auditoria não encontrada' }, { status: 404 })
     }
 
@@ -47,7 +47,6 @@ export async function GET(request: Request, { params }: Props) {
       total_pages: number
       broken_pages_count: number
       crawl_iterations: number
-      error_message: string | null
       created_at: string
       started_at: string | null
       completed_at: string | null
@@ -79,7 +78,6 @@ export async function GET(request: Request, { params }: Props) {
       pagesAudited: pagesAudited || 0,
       brokenPagesCount: auditData.broken_pages_count,
       crawlIterations: auditData.crawl_iterations,
-      errorMessage: auditData.error_message,
       createdAt: auditData.created_at,
       startedAt: auditData.started_at,
       completedAt: auditData.completed_at,
