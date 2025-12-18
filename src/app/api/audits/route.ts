@@ -155,6 +155,12 @@ export async function POST(request: Request) {
 
     console.log('[Audit] Task triggered', { auditId: audit.id, triggerId: handle.id })
 
+    // Salvar o trigger_run_id para poder cancelar depois
+    await supabase
+      .from('audits')
+      .update({ trigger_run_id: handle.id } as never)
+      .eq('id', audit.id)
+
     return NextResponse.json({ auditId: audit.id, triggerId: handle.id })
   } catch (triggerError) {
     // Sanitize error - não expor detalhes internos ao cliente

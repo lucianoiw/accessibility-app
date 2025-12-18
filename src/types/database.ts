@@ -175,6 +175,8 @@ export interface Audit {
   failed_pages: number
   broken_pages_count: number
   crawl_iterations: number
+  // Trigger.dev
+  trigger_run_id: string | null
   // Timestamps
   started_at: string | null
   completed_at: string | null

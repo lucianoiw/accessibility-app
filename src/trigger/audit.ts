@@ -168,6 +168,16 @@ export const runAuditTask = task({
 
     logger.info('Iniciando auditoria iterativa', { auditId, discoveryMethod, maxPages, includeCoga, includeEmag, includeAbnt })
 
+    // Helper para verificar cancelamento
+    const checkCancelled = async (): Promise<boolean> => {
+      const { data } = await supabase
+        .from('audits')
+        .select('status')
+        .eq('id', auditId)
+        .single()
+      return !!(data && (data as { status: string }).status === 'CANCELLED')
+    }
+
     // Preparar configuração de subdomínios
     const subdomainConfig: SubdomainConfig = {
       policy: subdomainPolicy || 'main_only',
@@ -276,14 +286,8 @@ export const runAuditTask = task({
       state.currentIteration++
 
       // Verificar se foi cancelado
-      const { data: auditCheck } = await supabase
-        .from('audits')
-        .select('status')
-        .eq('id', auditId)
-        .single()
-
-      if (auditCheck && (auditCheck as { status: string }).status === 'CANCELLED') {
-        logger.info('Auditoria foi cancelada pelo usuário')
+      if (await checkCancelled()) {
+        logger.info('Auditoria foi cancelada pelo usuário (início da iteração)')
         return {
           auditId,
           summary: { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 },
