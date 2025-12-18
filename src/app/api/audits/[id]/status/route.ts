@@ -16,12 +16,13 @@ export async function GET(request: Request, { params }: Props) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Buscar auditoria com info do projeto
+    // Buscar auditoria
     const { data: audit, error } = await supabase
       .from('audits')
       .select(`
         id,
         status,
+        project_id,
         processed_pages,
         total_pages,
         broken_pages_count,
@@ -29,8 +30,7 @@ export async function GET(request: Request, { params }: Props) {
         error_message,
         created_at,
         started_at,
-        completed_at,
-        projects!inner(user_id)
+        completed_at
       `)
       .eq('id', id)
       .single()
@@ -39,9 +39,28 @@ export async function GET(request: Request, { params }: Props) {
       return NextResponse.json({ error: 'Auditoria não encontrada' }, { status: 404 })
     }
 
-    // Verificar ownership
-    const project = audit.projects as { user_id: string }
-    if (project.user_id !== user.id) {
+    const auditData = audit as {
+      id: string
+      status: string
+      project_id: string
+      processed_pages: number
+      total_pages: number
+      broken_pages_count: number
+      crawl_iterations: number
+      error_message: string | null
+      created_at: string
+      started_at: string | null
+      completed_at: string | null
+    }
+
+    // Verificar ownership via projeto
+    const { data: project } = await supabase
+      .from('projects')
+      .select('user_id')
+      .eq('id', auditData.project_id)
+      .single()
+
+    if (!project || (project as { user_id: string }).user_id !== user.id) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
@@ -53,17 +72,17 @@ export async function GET(request: Request, { params }: Props) {
 
     // Retornar status
     return NextResponse.json({
-      id: audit.id,
-      status: audit.status,
-      processedPages: audit.processed_pages,
-      totalPages: audit.total_pages,
+      id: auditData.id,
+      status: auditData.status,
+      processedPages: auditData.processed_pages,
+      totalPages: auditData.total_pages,
       pagesAudited: pagesAudited || 0,
-      brokenPagesCount: audit.broken_pages_count,
-      crawlIterations: audit.crawl_iterations,
-      errorMessage: audit.error_message,
-      createdAt: audit.created_at,
-      startedAt: audit.started_at,
-      completedAt: audit.completed_at,
+      brokenPagesCount: auditData.broken_pages_count,
+      crawlIterations: auditData.crawl_iterations,
+      errorMessage: auditData.error_message,
+      createdAt: auditData.created_at,
+      startedAt: auditData.started_at,
+      completedAt: auditData.completed_at,
     })
   } catch (error) {
     console.error('[Audit Status] Error:', error)

@@ -16,14 +16,10 @@ export async function POST(request: Request, { params }: Props) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Buscar auditoria com info do projeto
+    // Buscar auditoria
     const { data: audit, error } = await supabase
       .from('audits')
-      .select(`
-        id,
-        status,
-        projects!inner(user_id)
-      `)
+      .select('id, status, project_id')
       .eq('id', id)
       .single()
 
@@ -31,15 +27,22 @@ export async function POST(request: Request, { params }: Props) {
       return NextResponse.json({ error: 'Auditoria não encontrada' }, { status: 404 })
     }
 
-    // Verificar ownership
-    const project = audit.projects as { user_id: string }
-    if (project.user_id !== user.id) {
+    const auditData = audit as { id: string; status: string; project_id: string }
+
+    // Verificar ownership via projeto
+    const { data: project } = await supabase
+      .from('projects')
+      .select('user_id')
+      .eq('id', auditData.project_id)
+      .single()
+
+    if (!project || (project as { user_id: string }).user_id !== user.id) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
     // Verificar se pode cancelar (só auditorias em progresso)
     const inProgressStatuses = ['PENDING', 'CRAWLING', 'AUDITING', 'AGGREGATING', 'GENERATING']
-    if (!inProgressStatuses.includes(audit.status)) {
+    if (!inProgressStatuses.includes(auditData.status)) {
       return NextResponse.json(
         { error: 'Apenas auditorias em andamento podem ser canceladas' },
         { status: 400 }

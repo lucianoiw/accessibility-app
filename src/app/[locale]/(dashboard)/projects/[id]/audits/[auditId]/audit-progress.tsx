@@ -30,7 +30,7 @@ interface Props {
 
 const POLL_INTERVAL = 3000 // 3 segundos
 
-export function AuditProgress({ auditId, projectId, initialStatus }: Props) {
+export function AuditProgress({ auditId, initialStatus }: Props) {
   const t = useTranslations('AuditStatus')
   const router = useRouter()
   const [status, setStatus] = useState<AuditStatus | null>(null)
@@ -153,7 +153,7 @@ export function AuditProgress({ auditId, projectId, initialStatus }: Props) {
           </div>
 
           {/* Progress Bar */}
-          {currentStatus === 'AUDITING' && status?.totalPages > 0 && (
+          {currentStatus === 'AUDITING' && status?.totalPages && status.totalPages > 0 && (
             <div className="w-full max-w-md space-y-2">
               <Progress value={progressPercent} className="h-2" />
               <p className="text-xs text-center text-muted-foreground">
