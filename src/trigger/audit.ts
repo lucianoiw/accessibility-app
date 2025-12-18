@@ -132,6 +132,8 @@ type ViolationWithPage = {
 // ========================================
 export const runAuditTask = task({
   id: 'run-audit',
+  // Máquina com mais memória para Playwright (4 GB RAM)
+  machine: { preset: 'medium-2x' },
   // Retry automático
   retry: {
     maxAttempts: 3,
