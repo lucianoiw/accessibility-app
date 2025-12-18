@@ -195,7 +195,14 @@
     "failed": "Failed",
     "cancelled": "Cancelled",
     "waitingStart": "Waiting to start...",
-    "pagesProcessed": "{processed} of {total} pages processed"
+    "pagesProcessed": "{processed} of {total} pages processed",
+    "discoveringPages": "Searching for site URLs...",
+    "brokenPagesFound": "{count} pages with errors found",
+    "aggregatingResults": "Processing and aggregating violations...",
+    "refresh": "Refresh",
+    "cancel": "Cancel",
+    "confirmCancel": "Are you sure you want to cancel this audit?",
+    "startedAt": "Started at"
   },
   "AuditFailed": {
     "title": "The audit failed",

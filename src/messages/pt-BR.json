@@ -195,7 +195,14 @@
     "failed": "Falhou",
     "cancelled": "Cancelada",
     "waitingStart": "Aguardando inicio...",
-    "pagesProcessed": "{processed} de {total} paginas processadas"
+    "pagesProcessed": "{processed} de {total} paginas processadas",
+    "discoveringPages": "Buscando URLs do site...",
+    "brokenPagesFound": "{count} paginas com erro encontradas",
+    "aggregatingResults": "Processando e agregando violacoes...",
+    "refresh": "Atualizar",
+    "cancel": "Cancelar",
+    "confirmCancel": "Tem certeza que deseja cancelar esta auditoria?",
+    "startedAt": "Iniciado em"
   },
   "AuditFailed": {
     "title": "A auditoria falhou",

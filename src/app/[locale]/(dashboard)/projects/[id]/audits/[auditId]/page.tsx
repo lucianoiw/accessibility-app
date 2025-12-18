@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/collapsible'
 import { Link } from '@/i18n/navigation'
 import type { Audit, Project, AggregatedViolation, BrokenPage } from '@/types'
-import { RefreshButton } from './refresh-button'
+import { AuditProgress } from './audit-progress'
 import { ViolationsFilter } from './violations-filter'
 import { ExportButton } from '@/components/reports/export-button'
 import { BrokenPagesCard } from './broken-pages-card'
@@ -183,22 +183,11 @@ export default async function AuditResultsPage({ params }: Props) {
 
       {/* Status */}
       {isInProgress ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-            <p className="text-lg font-medium">
-              {audit.status === 'CRAWLING' && tStatus('crawling')}
-              {audit.status === 'AUDITING' && tStatus('auditing')}
-              {audit.status === 'AGGREGATING' && tStatus('aggregating')}
-              {audit.status === 'GENERATING' && tStatus('generating')}
-              {audit.status === 'PENDING' && tStatus('waitingStart')}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {tStatus('pagesProcessed', { processed: audit.processed_pages, total: audit.total_pages })}
-            </p>
-            <RefreshButton />
-          </CardContent>
-        </Card>
+        <AuditProgress
+          auditId={auditId}
+          projectId={id}
+          initialStatus={audit.status}
+        />
       ) : audit.status === 'FAILED' ? (
         <Card className="border-red-200 bg-red-50 dark:bg-red-950">
           <CardContent className="py-8">
