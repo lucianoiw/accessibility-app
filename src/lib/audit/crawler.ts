@@ -835,23 +835,23 @@ export async function discoverInitialUrls(
 
         console.log(`[Discovery] HTTP ${status} - ${normalizedUrl}`)
 
-        // Se página com erro, pular
-        if (status >= 400) {
-          console.log(`[Discovery] Pulando página com erro: ${normalizedUrl}`)
-          continue
-        }
-
-        // Esperar página estabilizar
+        // Esperar página estabilizar (mesmo com erro, pode ter conteúdo)
         await waitForPageStable(page, requestTracker, { maxWait: 30000 })
 
-        // Adicionar à lista de descobertos se não estiver
-        if (!discovered.includes(normalizedUrl)) {
-          discovered.push(normalizedUrl)
-          fromCrawl++
-          console.log(`[Discovery] Descoberto: ${normalizedUrl} (total: ${discovered.length}/${targetWithMargin})`)
+        // Se página com erro, não adicionar à lista mas ainda extrair links
+        const isErrorPage = status >= 400
+        if (isErrorPage) {
+          console.log(`[Discovery] Página com erro ${status}, mas extraindo links: ${normalizedUrl}`)
+        } else {
+          // Adicionar à lista de descobertos se não estiver (só páginas sem erro)
+          if (!discovered.includes(normalizedUrl)) {
+            discovered.push(normalizedUrl)
+            fromCrawl++
+            console.log(`[Discovery] Descoberto: ${normalizedUrl} (total: ${discovered.length}/${targetWithMargin})`)
+          }
         }
 
-        // Extrair links para mais candidatos
+        // Extrair links para mais candidatos (mesmo de páginas com erro, que podem ter navegação)
         if (depth < maxDepth && discovered.length < targetWithMargin) {
           const links = await extractLinks(page, baseOrigin, subdomainConfig)
           console.log(`[Discovery] ${links.length} links encontrados em ${normalizedUrl}`)
@@ -1160,22 +1160,22 @@ export async function discoverWithPathScope(
 
         console.log(`[PathScopedCrawl] HTTP ${status} - ${normalizedUrl} (depth: ${currentDepth})`)
 
-        // Se página com erro, pular
-        if (status >= 400) {
-          console.log(`[PathScopedCrawl] Pulando página com erro: ${normalizedUrl}`)
-          continue
-        }
-
-        // Esperar página estabilizar
+        // Esperar página estabilizar (mesmo com erro, pode ter conteúdo)
         await waitForPageStable(page, requestTracker, { maxWait: 30000 })
 
-        // Adicionar à lista de descobertos se não estiver
-        if (!discovered.includes(normalizedUrl)) {
-          discovered.push(normalizedUrl)
-          console.log(`[PathScopedCrawl] Descoberto: ${normalizedUrl} (total: ${discovered.length}/${targetWithMargin})`)
+        // Se página com erro, não adicionar à lista mas ainda extrair links
+        const isErrorPage = status >= 400
+        if (isErrorPage) {
+          console.log(`[PathScopedCrawl] Página com erro ${status}, mas extraindo links: ${normalizedUrl}`)
+        } else {
+          // Adicionar à lista de descobertos se não estiver (só páginas sem erro)
+          if (!discovered.includes(normalizedUrl)) {
+            discovered.push(normalizedUrl)
+            console.log(`[PathScopedCrawl] Descoberto: ${normalizedUrl} (total: ${discovered.length}/${targetWithMargin})`)
+          }
         }
 
-        // Extrair links para mais candidatos (se ainda não atingiu profundidade máxima)
+        // Extrair links para mais candidatos (mesmo de páginas com erro, que podem ter navegação)
         if (currentDepth < depth && discovered.length < targetWithMargin) {
           const links = await extractLinks(page, baseOrigin, subdomainConfig)
           console.log(`[PathScopedCrawl] ${links.length} links encontrados em ${normalizedUrl}`)
