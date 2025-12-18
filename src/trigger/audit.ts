@@ -144,6 +144,16 @@ export const runAuditTask = task({
     const { auditId, projectId, discoveryMethod, discoveryConfig, wcagLevels, includeAbnt, includeEmag, includeCoga, includeWcagPartial, authConfig, subdomainPolicy, allowedSubdomains } = payload
     const supabase = createAdminClient()
 
+    // Verificar se Playwright está disponível
+    try {
+      const { chromium } = await import('playwright')
+      const executablePath = chromium.executablePath()
+      logger.info('Playwright disponível', { executablePath })
+    } catch (playwrightError) {
+      logger.error('Playwright NÃO disponível', { error: String(playwrightError) })
+      throw new Error(`Playwright não está instalado: ${playwrightError}`)
+    }
+
     // Extrair maxPages do discovery config
     const maxPages = discoveryMethod === 'manual'
       ? (discoveryConfig as ManualDiscoveryConfig).urls.length
