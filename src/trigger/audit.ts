@@ -12,6 +12,8 @@ import {
   type SubdomainConfig,
 } from '@/lib/audit'
 import { AXE_TO_EMAG, CUSTOM_TO_EMAG } from '@/lib/audit/emag-map'
+import { calculateAccessibilityScore, calculateRulesFromAudit } from '@/lib/audit/score-calculator'
+import { calculateSeverityPatternSummary } from '@/lib/audit/pattern-grouping'
 import type {
   AuditSummary,
   ImpactLevel,
@@ -674,7 +676,9 @@ export const runAuditTask = task({
     })
 
     // Agregar violações
-    const aggregated = aggregateViolations(allViolationsFromDb)
+    // IMPORTANTE: Usar allViolations (memória) para ter fullPath/xpath corretos
+    // allViolationsFromDb não tem esses campos pois não são salvos na tabela violations
+    const aggregated = aggregateViolations(allViolations.length > 0 ? allViolations : allViolationsFromDb)
 
     logger.info('Violações agregadas', { uniqueCount: aggregated.size })
 
@@ -738,7 +742,7 @@ export const runAuditTask = task({
 
     logger.info('Violações agregadas inseridas', { count: violationsToInsert.length })
 
-    // Calcular summary
+    // Calcular summary de ocorrências
     const summary: AuditSummary = {
       critical: 0,
       serious: 0,
@@ -749,10 +753,33 @@ export const runAuditTask = task({
 
     for (const { violations: pageViolations } of allViolationsFromDb) {
       for (const v of pageViolations) {
-        summary[v.impact as keyof Omit<AuditSummary, 'total'>]++
+        summary[v.impact as keyof Omit<AuditSummary, 'total' | 'patterns'>]++
         summary.total++
       }
     }
+
+    // Calcular padrões únicos por severidade (templates/componentes reutilizados)
+    // Formatar violações agregadas para o cálculo de padrões
+    const violationsForPatterns = violationsToInsert.map(v => ({
+      impact: v.impact as 'critical' | 'serious' | 'moderate' | 'minor',
+      unique_elements: v.unique_elements.map(el => ({
+        fullPath: el.fullPath,
+        xPath: el.xpath,
+      })),
+    }))
+
+    const patternSummary = calculateSeverityPatternSummary(violationsForPatterns)
+
+    // Adicionar padrões ao summary
+    summary.patterns = {
+      critical: patternSummary.critical.patterns,
+      serious: patternSummary.serious.patterns,
+      moderate: patternSummary.moderate.patterns,
+      minor: patternSummary.minor.patterns,
+      total: patternSummary.total.patterns,
+    }
+
+    logger.info('Padrões calculados', { patterns: summary.patterns })
 
     // ========================================
     // STEP 5: Finalizar auditoria
@@ -777,12 +804,54 @@ export const runAuditTask = task({
     // Determinar status final
     const targetReached = state.successfulAudits >= maxPages
 
+    // Calcular health score usando fórmula BrowserStack
+    // IMPORTANTE: Usar PADRÕES ÚNICOS, não ocorrências brutas
+    // Isso reflete o "esforço real" de correção (1 fix no template corrige N ocorrências)
+    // axe-core executa ~100 regras, usamos isso como base para estimar passed rules
+    const TOTAL_RULES_ESTIMATE = 100
+    const failedByPatterns = {
+      critical: summary.patterns?.critical ?? summary.critical,
+      serious: summary.patterns?.serious ?? summary.serious,
+      moderate: summary.patterns?.moderate ?? summary.moderate,
+      minor: summary.patterns?.minor ?? summary.minor,
+    }
+    const { passedRules, failedRules } = calculateRulesFromAudit(TOTAL_RULES_ESTIMATE, failedByPatterns)
+    const scoreData = calculateAccessibilityScore(passedRules, failedRules)
+    const healthScore = scoreData.score
+
+    logger.info('Health score calculado', {
+      healthScore,
+      failedByPatterns,
+      passedRules,
+      failedRules,
+      ocorrencias: { critical: summary.critical, serious: summary.serious, moderate: summary.moderate, minor: summary.minor }
+    })
+
+    // Buscar auditoria anterior para comparação
+    const { data: previousAuditData } = await supabase
+      .from('audits')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('status', 'COMPLETED')
+      .neq('id', auditId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    const previousAuditId = (previousAuditData as { id: string } | null)?.id ?? null
+
+    if (previousAuditId) {
+      logger.info('Auditoria anterior encontrada para comparação', { previousAuditId })
+    }
+
     await supabase
       .from('audits')
       .update({
         status: 'COMPLETED',
         completed_at: new Date().toISOString(),
         summary,
+        health_score: healthScore,
+        previous_audit_id: previousAuditId,
         total_pages: maxPages,
         processed_pages: state.successfulAudits,
         failed_pages: state.brokenPages.length,

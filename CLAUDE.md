@@ -388,6 +388,35 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 - [x] Redirecionamento para lista apos cancelamento
 - [x] Card especifico para auditorias canceladas
 
+### Comparacao e Evolucao de Auditorias (Sprint 1 - Backend)
+
+- [x] Campos `health_score` e `previous_audit_id` na tabela `audits`
+- [x] Tabela `audit_comparisons` para cache de comparacoes
+- [x] Tabela `violation_changes` para detalhes de mudancas
+- [x] Calculo automatico de `health_score` ao finalizar auditoria
+- [x] Link automatico para auditoria anterior (`previous_audit_id`)
+- [x] API `GET /api/audits/[id]/comparison` para comparacao entre auditorias
+- [x] API `GET /api/projects/[id]/evolution` para dados de evolucao
+- [x] Logica de comparacao: novas, corrigidas, persistentes, pioraram, melhoraram
+- [x] Calculo de deltas por severidade (critical, serious, moderate, minor)
+- [x] Geracao de insights automaticos (mensagens explicativas)
+- [x] Calculo de tendencias (up, down, stable) com percentuais
+- [x] Suporte a periodos (7d, 30d, 90d, 1y, all)
+- [x] Tipos TypeScript completos para todas as estruturas
+
+**Arquivos criados:**
+- `supabase/migrations/00015_add_audit_comparison.sql`
+- `src/lib/audit/comparison.ts` - Logica de comparacao
+- `src/lib/audit/insights.ts` - Geracao de insights e tendencias
+- `src/app/api/audits/[id]/comparison/route.ts`
+- `src/app/api/projects/[id]/evolution/route.ts`
+
+**Proximos passos (Sprint 2+):**
+- [ ] Componentes UI: DeltaBadge, TrendIndicator, ComparisonCard, EvolutionChart
+- [ ] Pagina de comparacao detalhada
+- [ ] Integracao no dashboard do projeto
+- [ ] Traducoes (AuditComparison, AuditEvolution)
+
 ### Gestao de Violacoes
 
 - [x] Agregacao por regra com elementos unicos (unique_elements)

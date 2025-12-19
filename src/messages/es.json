@@ -167,6 +167,8 @@
     "recentAudits": "Auditorias Recientes",
     "noAudits": "Ninguna auditoria realizada todavia",
     "violations": "Violaciones",
+    "patterns": "patrones",
+    "patternsTooltip": "Los patrones son violaciones en templates/componentes reutilizados. Corregir 1 patron puede resolver multiples ocurrencias.",
     "uniqueTypes": "tipos unicos",
     "pages": "Paginas",
     "pagesAudited": "paginas auditadas",
@@ -530,7 +532,8 @@
     "issueSummaryDescription": "Una severidad de issue mayor indica un impacto mas serio para usuarios con discapacidades.",
     "issueSummaryTooltip": "Los problemas estan agrupados por severidad. Severidades mas altas indican mayor impacto en la experiencia de usuarios con discapacidades.",
     "issueSeverity": "Severidad del Issue",
-    "issueCount": "Cantidad de Issues",
+    "issueCount": "Ocurrencias",
+    "issuePatterns": "Patrones",
     "unexpectedChanges": "Cambios inesperados en el conteo de issues?",
     "understandWhy": "Entender porque",
     "issues": "Issues",
@@ -855,5 +858,100 @@
     "video-sem-legendas": "Video sin subtitulos visibles",
     "video-sem-audiodescricao": "Video puede necesitar audiodescripcion",
     "select-onchange-navega": "Select navega al cambiar"
+  },
+  "AuditComparison": {
+    "title": "Comparacion de Auditorias",
+    "comparingWith": "Comparando con",
+    "selectAudit": "Seleccionar auditoria",
+    "noComparison": "Esta es la primera auditoria del proyecto",
+    "comparedWith": "Comparado con auditoria del {date}",
+    "viewDetails": "Ver detalles",
+    "compareWith": "Comparar con otra",
+    "previousAudit": "Auditoria anterior",
+    "currentAudit": "Auditoria actual",
+    "delta": {
+      "new": "Nuevos",
+      "fixed": "Corregidos",
+      "persistent": "Persistentes",
+      "worsened": "Empeoraron",
+      "improved": "Mejoraron",
+      "noChange": "Sin cambio",
+      "increased": "Aumento",
+      "decreased": "Disminuyo"
+    },
+    "tabs": {
+      "new": "Nuevas ({count})",
+      "fixed": "Corregidas ({count})",
+      "persistent": "Persistentes ({count})",
+      "worsened": "Empeoraron ({count})",
+      "improved": "Mejoraron ({count})"
+    },
+    "summary": {
+      "healthScore": "Score de Salud",
+      "violations": "Violaciones",
+      "patterns": "patrones",
+      "pagesAudited": "Paginas Auditadas",
+      "brokenPages": "Paginas Rotas"
+    },
+    "tooltips": {
+      "deltaPositive": "Aumento de {value} desde la ultima auditoria",
+      "deltaNegative": "Reduccion de {value} desde la ultima auditoria",
+      "newViolation": "Esta violacion no existia en la auditoria anterior",
+      "fixedViolation": "Esta violacion fue corregida",
+      "persistentViolation": "Esta violacion persiste desde la auditoria anterior",
+      "worsenedViolation": "Esta violacion tiene mas ocurrencias ahora",
+      "improvedViolation": "Esta violacion tiene menos ocurrencias ahora",
+      "patterns": "Los patrones son violaciones en templates/componentes reutilizados. Corregir 1 patron puede resolver multiples ocurrencias."
+    }
+  },
+  "AuditEvolution": {
+    "title": "Evolucion de Accesibilidad",
+    "subtitle": "Siga el progreso a lo largo del tiempo",
+    "period": {
+      "label": "Periodo",
+      "7d": "Ultimos 7 dias",
+      "30d": "Ultimos 30 dias",
+      "90d": "Ultimos 90 dias",
+      "1y": "Ultimo ano",
+      "all": "Todo el historial"
+    },
+    "chart": {
+      "healthScore": "Score de Salud",
+      "violations": "Violaciones",
+      "patterns": "Patrones",
+      "critical": "Criticas",
+      "serious": "Graves",
+      "moderate": "Moderadas",
+      "minor": "Menores",
+      "showAll": "Mostrar todas",
+      "hideAll": "Ocultar todas"
+    },
+    "trend": {
+      "improving": "Mejorando",
+      "worsening": "Empeorando",
+      "stable": "Estable",
+      "noData": "Datos insuficientes"
+    },
+    "insights": {
+      "criticalFixed": "{count, plural, =1 {1 problema critico fue corregido} other {# problemas criticos fueron corregidos}} desde la ultima auditoria",
+      "seriousFixed": "{count, plural, =1 {1 problema grave fue corregido} other {# problemas graves fueron corregidos}}",
+      "newCritical": "{count, plural, =1 {1 nuevo problema critico aparecio} other {# nuevos problemas criticos aparecieron}}",
+      "newSerious": "{count, plural, =1 {1 nuevo problema grave aparecio} other {# nuevos problemas graves aparecieron}}",
+      "scoreImproved": "El score de salud mejoro {percent}%",
+      "scoreDecreased": "El score de salud bajo {percent}%",
+      "focusOn": "Enfoquese en corregir {count, plural, =1 {el problema critico restante} other {los # problemas criticos restantes}} para mejorar su score",
+      "greatProgress": "Excelente progreso! Continue asi.",
+      "significantRegression": "Atencion: {count} nuevas violaciones detectadas",
+      "noViolations": "Felicitaciones! Ninguna violacion encontrada.",
+      "firstAudit": "Esta es su primera auditoria. Ejecute mas auditorias para ver la evolucion.",
+      "manyFixed": "{count} violaciones fueron corregidas",
+      "manyNew": "{count} nuevas violaciones detectadas",
+      "stable": "El sitio esta estable, sin cambios significativos.",
+      "consistentImprovement": "Mejora consistente de {percent}% a lo largo del tiempo",
+      "consistentWorsening": "Empeoramiento consistente de {percent}% a lo largo del tiempo",
+      "recentSpike": "Pico reciente: {count} nuevas violaciones en la ultima auditoria",
+      "recentDrop": "Caida reciente: {count} violaciones corregidas en la ultima auditoria",
+      "criticalTrend": "Tendencia de problemas criticos: {direction}"
+    }
   }
 }

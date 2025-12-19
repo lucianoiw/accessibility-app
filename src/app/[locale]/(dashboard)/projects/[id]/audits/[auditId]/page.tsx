@@ -21,11 +21,11 @@ import { ViolationsFilter } from './violations-filter'
 import { ExportButton } from '@/components/reports/export-button'
 import { BrokenPagesCard } from './broken-pages-card'
 import {
-  calculateAccessibilityScore,
   getCategoriesSortedByCount,
   createScanLogEntries,
   type SeverityBreakdown,
 } from '@/lib/audit'
+import { calculateSeverityPatternSummary } from '@/lib/audit/pattern-grouping'
 import {
   AlertTriangle,
   Ban,
@@ -117,7 +117,8 @@ export default async function AuditResultsPage({ params }: Props) {
   // Calcular dados para os novos componentes
   const violationsList = violations ?? []
 
-  // Calcular passed/failed rules por severidade
+  // Usar health_score salvo no banco para consistência com a lista de auditorias
+  // Se não existir, calcular usando a fórmula de passed/failed como fallback
   const failedByImpact: SeverityBreakdown = {
     critical: violationsList.filter(v => v.impact === 'critical').length,
     serious: violationsList.filter(v => v.impact === 'serious').length,
@@ -125,22 +126,39 @@ export default async function AuditResultsPage({ params }: Props) {
     minor: violationsList.filter(v => v.impact === 'minor').length,
   }
 
-  // Estimar passed rules (baseado em ~100 regras axe-core)
-  const totalRulesRun = 100
-  const totalFailed = failedByImpact.critical + failedByImpact.serious + failedByImpact.moderate + failedByImpact.minor
-  const totalPassed = Math.max(0, totalRulesRun - totalFailed)
+  // Usar o score salvo no banco (consistência com lista de auditorias)
+  // O health_score é calculado pelo trigger usando a mesma fórmula
+  const savedHealthScore = audit.health_score ?? 0
 
-  const passedByImpact: SeverityBreakdown = {
-    critical: Math.round(totalPassed * 0.3),
-    serious: Math.round(totalPassed * 0.4),
-    moderate: Math.round(totalPassed * 0.2),
-    minor: Math.max(0, totalPassed - Math.round(totalPassed * 0.9)),
+  // Criar scoreData compatível com ScoreCard usando o health_score do banco
+  const scoreData = {
+    score: savedHealthScore,
+    passedRules: { critical: 0, serious: 0, moderate: 0, minor: 0 },
+    failedRules: failedByImpact,
+    scoreImpact: {
+      critical: -failedByImpact.critical * 10,
+      serious: -failedByImpact.serious * 7,
+      moderate: -failedByImpact.moderate * 3,
+      minor: -failedByImpact.minor * 1,
+    },
+    weightedPassed: 0,
+    weightedFailed: failedByImpact.critical * 10 + failedByImpact.serious * 7 + failedByImpact.moderate * 3 + failedByImpact.minor * 1,
   }
-
-  const scoreData = calculateAccessibilityScore(passedByImpact, failedByImpact)
 
   // Calcular issue counts por severidade
   const summary = audit.summary ?? { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 }
+
+  // Usar padrões salvos no summary (consistência) ou recalcular se não existir
+  // Para auditorias antigas sem patterns salvos, recalcular dinamicamente
+  const patternSummary = summary.patterns
+    ? {
+        critical: { occurrences: 0, patterns: summary.patterns.critical },
+        serious: { occurrences: 0, patterns: summary.patterns.serious },
+        moderate: { occurrences: 0, patterns: summary.patterns.moderate },
+        minor: { occurrences: 0, patterns: summary.patterns.minor },
+        total: { occurrences: 0, patterns: summary.patterns.total },
+      }
+    : calculateSeverityPatternSummary(violationsList)
 
   // Categorias
   const categories = getCategoriesSortedByCount(violationsList)
@@ -233,6 +251,13 @@ export default async function AuditResultsPage({ params }: Props) {
               serious={summary.serious}
               moderate={summary.moderate}
               minor={summary.minor}
+              patterns={{
+                critical: patternSummary.critical.patterns,
+                serious: patternSummary.serious.patterns,
+                moderate: patternSummary.moderate.patterns,
+                minor: patternSummary.minor.patterns,
+                total: patternSummary.total.patterns,
+              }}
             />
           </div>
 

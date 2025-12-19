@@ -26,6 +26,8 @@ function createAudit(overrides: Partial<Audit> = {}): Audit {
     id: 'audit-123',
     project_id: 'project-123',
     status: 'COMPLETED',
+    discovery_method: 'crawler',
+    discovery_config: { startUrl: 'https://example.com', depth: 2, maxPages: 50 },
     max_pages: 50,
     wcag_levels: ['A', 'AA'],
     include_abnt: true,
@@ -36,9 +38,13 @@ function createAudit(overrides: Partial<Audit> = {}): Audit {
     failed_pages: 0,
     broken_pages_count: 0,
     crawl_iterations: 2,
+    trigger_run_id: null,
+    health_score: null,
+    previous_audit_id: null,
     started_at: new Date().toISOString(),
     completed_at: new Date().toISOString(),
     summary: null,
+    project_config_snapshot: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -89,11 +95,12 @@ function createViolation(overrides: Partial<AggregatedViolation> = {}): Aggregat
 // ============================================
 
 describe('Constants', () => {
-  it('has correct severity weights', () => {
+  it('has correct severity weights (industry standard)', () => {
+    // Pesos baseados no padrao Lighthouse/axe-core/Cypress
     expect(SEVERITY_WEIGHTS).toEqual({
       critical: 10,
-      serious: 5,
-      moderate: 2,
+      serious: 7,
+      moderate: 3,
       minor: 1,
     })
   })
@@ -128,48 +135,77 @@ describe('calculateHealthScore', () => {
     expect(calculateHealthScore(audit)).toBe(100)
   })
 
-  it('returns 0 when all violations are critical', () => {
+  it('calculates score using exponential decay formula', () => {
+    // Formula V2: health = 100 * e^(-density/DECAY_FACTOR)
+    // where density = penalty / processed_pages
+    // and DECAY_FACTOR = 400
+    //
+    // 10 critical on 1 page:
+    // - penalty = 10 * 10 = 100
+    // - density = 100 / 1 = 100
+    // - health = 100 * e^(-100/400) = 100 * e^(-0.25) ≈ 78
     const audit = createAudit({
+      processed_pages: 1,
       summary: { total: 10, critical: 10, serious: 0, moderate: 0, minor: 0 },
     })
-    expect(calculateHealthScore(audit)).toBe(0)
+    expect(calculateHealthScore(audit)).toBe(78)
   })
 
-  it('returns 90 when all violations are minor', () => {
-    // 10 minor violations: penalty = 10 * 1 = 10
-    // maxPenalty = 10 * 10 = 100
-    // health = 100 - (10/100 * 100) = 90
+  it('returns high score when violations are spread across many pages', () => {
+    // 10 critical on 10 pages (1 per page):
+    // - penalty = 10 * 10 = 100
+    // - density = 100 / 10 = 10
+    // - health = 100 * e^(-10/400) = 100 * e^(-0.025) ≈ 98
     const audit = createAudit({
+      processed_pages: 10,
+      summary: { total: 10, critical: 10, serious: 0, moderate: 0, minor: 0 },
+    })
+    expect(calculateHealthScore(audit)).toBe(98)
+  })
+
+  it('returns very high score for minor-only violations', () => {
+    // 10 minor on 1 page:
+    // - penalty = 10 * 1 = 10
+    // - density = 10 / 1 = 10
+    // - health = 100 * e^(-10/400) ≈ 98
+    const audit = createAudit({
+      processed_pages: 1,
       summary: { total: 10, critical: 0, serious: 0, moderate: 0, minor: 10 },
     })
-    expect(calculateHealthScore(audit)).toBe(90)
+    expect(calculateHealthScore(audit)).toBe(98)
   })
 
   it('calculates correct score for mixed severities', () => {
     // 2 critical + 3 serious + 3 moderate + 2 minor = 10 total
-    // penalty = 2*10 + 3*5 + 3*2 + 2*1 = 20 + 15 + 6 + 2 = 43
-    // maxPenalty = 10 * 10 = 100
-    // health = 100 - (43/100 * 100) = 57
+    // penalty = 2*10 + 3*7 + 3*3 + 2*1 = 20 + 21 + 9 + 2 = 52
+    // density = 52 / 1 = 52
+    // health = 100 * e^(-52/400) ≈ 88
     const audit = createAudit({
+      processed_pages: 1,
       summary: { total: 10, critical: 2, serious: 3, moderate: 3, minor: 2 },
     })
-    expect(calculateHealthScore(audit)).toBe(57)
+    expect(calculateHealthScore(audit)).toBe(88)
   })
 
   it('penalizes critical violations more than others', () => {
+    // Use higher violation counts so differences are visible after rounding
+    // All on 1 page to maximize density differences
     const auditCritical = createAudit({
-      summary: { total: 1, critical: 1, serious: 0, moderate: 0, minor: 0 },
+      processed_pages: 1,
+      summary: { total: 50, critical: 50, serious: 0, moderate: 0, minor: 0 },
     })
     const auditSerious = createAudit({
-      summary: { total: 1, critical: 0, serious: 1, moderate: 0, minor: 0 },
+      processed_pages: 1,
+      summary: { total: 50, critical: 0, serious: 50, moderate: 0, minor: 0 },
     })
     const auditMinor = createAudit({
-      summary: { total: 1, critical: 0, serious: 0, moderate: 0, minor: 1 },
+      processed_pages: 1,
+      summary: { total: 50, critical: 0, serious: 0, moderate: 0, minor: 50 },
     })
 
-    const scoreCritical = calculateHealthScore(auditCritical)
-    const scoreSerious = calculateHealthScore(auditSerious)
-    const scoreMinor = calculateHealthScore(auditMinor)
+    const scoreCritical = calculateHealthScore(auditCritical) // penalty=500, density=500, score≈29
+    const scoreSerious = calculateHealthScore(auditSerious)   // penalty=350, density=350, score≈42
+    const scoreMinor = calculateHealthScore(auditMinor)       // penalty=50, density=50, score≈88
 
     expect(scoreCritical).toBeLessThan(scoreSerious)
     expect(scoreSerious).toBeLessThan(scoreMinor)

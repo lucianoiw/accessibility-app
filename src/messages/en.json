@@ -167,6 +167,8 @@
     "recentAudits": "Recent Audits",
     "noAudits": "No audits performed yet",
     "violations": "Violations",
+    "patterns": "patterns",
+    "patternsTooltip": "Patterns are violations in reused templates/components. Fixing 1 pattern can resolve multiple occurrences.",
     "uniqueTypes": "unique types",
     "pages": "Pages",
     "pagesAudited": "pages audited",
@@ -183,7 +185,9 @@
     "auditDetails": "Audit Details",
     "viewResults": "View results",
     "auditInProgress": "Audit in progress...",
-    "auditNotFound": "Audit not found"
+    "auditNotFound": "Audit not found",
+    "recalculatePatterns": "Recalculate patterns",
+    "recalculating": "Recalculating..."
   },
   "AuditStatus": {
     "pending": "Pending",
@@ -530,7 +534,8 @@
     "issueSummaryDescription": "A higher issue severity level indicates a more serious impact on users with disabilities.",
     "issueSummaryTooltip": "Issues are grouped by severity. Higher severities indicate greater impact on the experience of users with disabilities.",
     "issueSeverity": "Issue Severity",
-    "issueCount": "Issue Count",
+    "issueCount": "Occurrences",
+    "issuePatterns": "Patterns",
     "unexpectedChanges": "Seeing unexpected changes in issue count?",
     "understandWhy": "Understand why",
     "issues": "Issues",
@@ -855,5 +860,100 @@
     "video-sem-legendas": "Video without visible captions",
     "video-sem-audiodescricao": "Video may need audio description",
     "select-onchange-navega": "Select navigates on change"
+  },
+  "AuditComparison": {
+    "title": "Audit Comparison",
+    "comparingWith": "Comparing with",
+    "selectAudit": "Select audit",
+    "noComparison": "This is the project's first audit",
+    "comparedWith": "Compared with audit from {date}",
+    "viewDetails": "View details",
+    "compareWith": "Compare with another",
+    "previousAudit": "Previous audit",
+    "currentAudit": "Current audit",
+    "delta": {
+      "new": "New",
+      "fixed": "Fixed",
+      "persistent": "Persistent",
+      "worsened": "Worsened",
+      "improved": "Improved",
+      "noChange": "No change",
+      "increased": "Increased",
+      "decreased": "Decreased"
+    },
+    "tabs": {
+      "new": "New ({count})",
+      "fixed": "Fixed ({count})",
+      "persistent": "Persistent ({count})",
+      "worsened": "Worsened ({count})",
+      "improved": "Improved ({count})"
+    },
+    "summary": {
+      "healthScore": "Health Score",
+      "violations": "Violations",
+      "patterns": "patterns",
+      "pagesAudited": "Pages Audited",
+      "brokenPages": "Broken Pages"
+    },
+    "tooltips": {
+      "deltaPositive": "Increased by {value} since last audit",
+      "deltaNegative": "Decreased by {value} since last audit",
+      "newViolation": "This violation did not exist in the previous audit",
+      "fixedViolation": "This violation has been fixed",
+      "persistentViolation": "This violation persists since the previous audit",
+      "worsenedViolation": "This violation has more occurrences now",
+      "improvedViolation": "This violation has fewer occurrences now",
+      "patterns": "Patterns are violations in reused templates/components. Fixing 1 pattern can resolve multiple occurrences."
+    }
+  },
+  "AuditEvolution": {
+    "title": "Accessibility Evolution",
+    "subtitle": "Track progress over time",
+    "period": {
+      "label": "Period",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "1y": "Last year",
+      "all": "All history"
+    },
+    "chart": {
+      "healthScore": "Health Score",
+      "violations": "Violations",
+      "patterns": "Patterns",
+      "critical": "Critical",
+      "serious": "Serious",
+      "moderate": "Moderate",
+      "minor": "Minor",
+      "showAll": "Show all",
+      "hideAll": "Hide all"
+    },
+    "trend": {
+      "improving": "Improving",
+      "worsening": "Worsening",
+      "stable": "Stable",
+      "noData": "Insufficient data"
+    },
+    "insights": {
+      "criticalFixed": "{count, plural, =1 {1 critical issue was fixed} other {# critical issues were fixed}} since last audit",
+      "seriousFixed": "{count, plural, =1 {1 serious issue was fixed} other {# serious issues were fixed}}",
+      "newCritical": "{count, plural, =1 {1 new critical issue appeared} other {# new critical issues appeared}}",
+      "newSerious": "{count, plural, =1 {1 new serious issue appeared} other {# new serious issues appeared}}",
+      "scoreImproved": "Health score improved by {percent}%",
+      "scoreDecreased": "Health score decreased by {percent}%",
+      "focusOn": "Focus on fixing the {count, plural, =1 {remaining critical issue} other {# remaining critical issues}} to improve your score",
+      "greatProgress": "Excellent progress! Keep it up.",
+      "significantRegression": "Warning: {count} new violations detected",
+      "noViolations": "Congratulations! No violations found.",
+      "firstAudit": "This is your first audit. Run more audits to see evolution.",
+      "manyFixed": "{count} violations were fixed",
+      "manyNew": "{count} new violations detected",
+      "stable": "The site is stable, no significant changes.",
+      "consistentImprovement": "Consistent improvement of {percent}% over time",
+      "consistentWorsening": "Consistent worsening of {percent}% over time",
+      "recentSpike": "Recent spike: {count} new violations in the last audit",
+      "recentDrop": "Recent drop: {count} violations fixed in the last audit",
+      "criticalTrend": "Critical issues trend: {direction}"
+    }
   }
 }

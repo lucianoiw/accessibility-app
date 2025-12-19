@@ -33,6 +33,12 @@ export type SubdomainPolicy = 'main_only' | 'all_subdomains' | 'specific'
 
 export type BrokenPageErrorType = 'timeout' | 'http_error' | 'connection_error' | 'ssl_error' | 'other'
 
+export type ViolationChangeType = 'new' | 'fixed' | 'persistent' | 'worsened' | 'improved'
+
+export type TrendDirection = 'up' | 'down' | 'stable'
+
+export type InsightType = 'positive' | 'negative' | 'neutral' | 'warning'
+
 // ============================================
 // Discovery Config Types
 // ============================================
@@ -177,6 +183,9 @@ export interface Audit {
   crawl_iterations: number
   // Trigger.dev
   trigger_run_id: string | null
+  // Score e comparacao
+  health_score: number | null
+  previous_audit_id: string | null
   // Timestamps
   started_at: string | null
   completed_at: string | null
@@ -191,6 +200,14 @@ export interface AuditSummary {
   moderate: number
   minor: number
   total: number
+  // Contagem de padrões únicos por severidade (templates/componentes reutilizados)
+  patterns?: {
+    critical: number
+    serious: number
+    moderate: number
+    minor: number
+    total: number
+  }
 }
 
 // Resultado da verificação de correção de violação
@@ -313,6 +330,172 @@ export interface BrokenPage {
 }
 
 // ============================================
+// Audit Comparison Types
+// ============================================
+
+export interface AuditComparison {
+  id: string
+  audit_id: string
+  previous_audit_id: string
+  // Deltas de summary por severidade
+  delta_critical: number
+  delta_serious: number
+  delta_moderate: number
+  delta_minor: number
+  delta_total: number
+  // Delta de score de saude
+  delta_health_score: number
+  // Deltas de paginas
+  delta_pages_audited: number
+  delta_broken_pages: number
+  // Contagens de violacoes por tipo de mudanca
+  new_violations_count: number
+  fixed_violations_count: number
+  persistent_violations_count: number
+  worsened_violations_count: number
+  improved_violations_count: number
+  // Timestamps
+  created_at: string
+}
+
+export interface ViolationChange {
+  id: string
+  comparison_id: string
+  rule_id: string
+  fingerprint: string
+  change_type: ViolationChangeType
+  // Dados da violacao atual
+  current_occurrences: number | null
+  current_page_count: number | null
+  current_impact: ImpactLevel | null
+  // Dados da violacao anterior
+  previous_occurrences: number | null
+  previous_page_count: number | null
+  previous_impact: ImpactLevel | null
+  // Delta
+  delta_occurrences: number
+  delta_page_count: number
+  // Metadados para exibicao
+  help: string | null
+  description: string | null
+  created_at: string
+}
+
+// ============================================
+// Comparison API Response Types
+// ============================================
+
+export interface AuditComparisonSummary {
+  id: string
+  createdAt: string
+  completedAt: string | null
+  healthScore: number | null
+  summary: AuditSummary | null
+  pagesAudited: number
+  brokenPagesCount: number
+}
+
+export interface ComparisonDelta {
+  healthScore: number
+  critical: number
+  serious: number
+  moderate: number
+  minor: number
+  total: number
+  pagesAudited: number
+  brokenPages: number
+}
+
+export interface ViolationChangeDetail {
+  type: ViolationChangeType
+  ruleId: string
+  fingerprint: string
+  help: string
+  description: string
+  current: {
+    occurrences: number
+    pageCount: number
+    impact: ImpactLevel
+  } | null
+  previous: {
+    occurrences: number
+    pageCount: number
+    impact: ImpactLevel
+  } | null
+  delta: {
+    occurrences: number
+    pageCount: number
+  }
+}
+
+export interface ComparisonViolations {
+  new: ViolationChangeDetail[]
+  fixed: ViolationChangeDetail[]
+  persistent: ViolationChangeDetail[]
+  worsened: ViolationChangeDetail[]
+  improved: ViolationChangeDetail[]
+}
+
+export interface AvailableAuditForComparison {
+  id: string
+  createdAt: string
+  summary: AuditSummary | null
+  healthScore: number | null
+}
+
+export interface ComparisonResponse {
+  current: AuditComparisonSummary
+  previous: AuditComparisonSummary | null
+  delta: ComparisonDelta
+  violations: ComparisonViolations
+  availableAudits: AvailableAuditForComparison[]
+}
+
+// ============================================
+// Evolution API Response Types
+// ============================================
+
+export interface TrendData {
+  direction: TrendDirection
+  changePercent: number
+  changeAbsolute: number
+  values: Array<{ date: string; value: number }>
+}
+
+export interface EvolutionTrends {
+  healthScore: TrendData
+  critical: TrendData
+  serious: TrendData
+  moderate: TrendData
+  minor: TrendData
+  total: TrendData
+}
+
+export interface Insight {
+  type: InsightType
+  key: string
+  params: Record<string, string | number>
+}
+
+export interface EvolutionAudit {
+  id: string
+  createdAt: string
+  completedAt: string | null
+  healthScore: number | null
+  summary: AuditSummary | null
+  pagesAudited: number
+  brokenPagesCount: number
+  wcagLevels: string[]
+  includeEmag: boolean
+}
+
+export interface EvolutionResponse {
+  audits: EvolutionAudit[]
+  trends: EvolutionTrends
+  insights: Insight[]
+}
+
+// ============================================
 // Supabase Database Type
 // ============================================
 
@@ -357,10 +540,48 @@ export type AuditInsert = {
   failed_pages?: number
   broken_pages_count?: number
   crawl_iterations?: number
+  // Score e comparacao
+  health_score?: number | null
+  previous_audit_id?: string | null
   // Timestamps
   started_at?: string | null
   completed_at?: string | null
   summary?: AuditSummary | null
+}
+
+export type AuditComparisonInsert = {
+  audit_id: string
+  previous_audit_id: string
+  delta_critical?: number
+  delta_serious?: number
+  delta_moderate?: number
+  delta_minor?: number
+  delta_total?: number
+  delta_health_score?: number
+  delta_pages_audited?: number
+  delta_broken_pages?: number
+  new_violations_count?: number
+  fixed_violations_count?: number
+  persistent_violations_count?: number
+  worsened_violations_count?: number
+  improved_violations_count?: number
+}
+
+export type ViolationChangeInsert = {
+  comparison_id: string
+  rule_id: string
+  fingerprint: string
+  change_type: ViolationChangeType
+  current_occurrences?: number | null
+  current_page_count?: number | null
+  current_impact?: ImpactLevel | null
+  previous_occurrences?: number | null
+  previous_page_count?: number | null
+  previous_impact?: ImpactLevel | null
+  delta_occurrences?: number
+  delta_page_count?: number
+  help?: string | null
+  description?: string | null
 }
 
 export type BrokenPageInsert = {
@@ -467,6 +688,16 @@ export interface Database {
         Insert: BrokenPageInsert
         Update: Partial<BrokenPage>
       }
+      audit_comparisons: {
+        Row: AuditComparison
+        Insert: AuditComparisonInsert
+        Update: Partial<AuditComparison>
+      }
+      violation_changes: {
+        Row: ViolationChange
+        Insert: ViolationChangeInsert
+        Update: Partial<ViolationChange>
+      }
     }
     Enums: {
       plan_type: PlanType
@@ -480,6 +711,9 @@ export interface Database {
       report_status: ReportStatus
       broken_page_error_type: BrokenPageErrorType
       discovery_method: DiscoveryMethod
+      violation_change_type: ViolationChangeType
+      trend_direction: TrendDirection
+      insight_type: InsightType
     }
   }
 }

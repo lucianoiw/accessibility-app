@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import type { Project, Audit } from '@/types'
 import { StartAuditButton } from './start-audit-button'
+import { ProjectEvolutionSection } from './project-evolution-section'
 import {
   Activity,
   AlertTriangle,
@@ -239,6 +240,15 @@ export default async function ProjectDashboardPage({ params }: Props) {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Evolucao e Comparacao */}
+      {completedAudits.length > 0 && (
+        <ProjectEvolutionSection
+          projectId={project.id}
+          lastAuditId={lastAudit?.id || null}
+          locale={locale}
+        />
       )}
 
       {/* Auditorias Recentes */}

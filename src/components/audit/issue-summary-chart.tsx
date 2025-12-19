@@ -18,11 +18,20 @@ import {
 import { HelpCircle } from "lucide-react";
 import { cn } from "@/utils";
 
+interface PatternCounts {
+  critical: number;
+  serious: number;
+  moderate: number;
+  minor: number;
+  total: number;
+}
+
 interface IssueSummaryChartProps {
   critical: number;
   serious: number;
   moderate: number;
   minor: number;
+  patterns?: PatternCounts;
   className?: string;
 }
 
@@ -38,6 +47,7 @@ export function IssueSummaryChart({
   serious,
   moderate,
   minor,
+  patterns,
   className,
 }: IssueSummaryChartProps) {
   const t = useTranslations("AuditComponents");
@@ -83,28 +93,32 @@ export function IssueSummaryChart({
         key: "critical",
         label: tSeverity("critical"),
         count: critical,
+        patternCount: patterns?.critical ?? 0,
         color: SEVERITY_COLORS.critical,
       },
       {
         key: "serious",
         label: tSeverity("serious"),
         count: serious,
+        patternCount: patterns?.serious ?? 0,
         color: SEVERITY_COLORS.serious,
       },
       {
         key: "moderate",
         label: tSeverity("moderate"),
         count: moderate,
+        patternCount: patterns?.moderate ?? 0,
         color: SEVERITY_COLORS.moderate,
       },
       {
         key: "minor",
         label: tSeverity("minor"),
         count: minor,
+        patternCount: patterns?.minor ?? 0,
         color: SEVERITY_COLORS.minor,
       },
     ],
-    [tSeverity, critical, serious, moderate, minor]
+    [tSeverity, critical, serious, moderate, minor, patterns]
   );
 
   return (
@@ -172,6 +186,11 @@ export function IssueSummaryChart({
                   <th className="text-right pb-2 font-medium">
                     {t("issueCount")}
                   </th>
+                  {patterns && (
+                    <th className="text-right pb-2 font-medium">
+                      {t("issuePatterns")}
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -187,6 +206,11 @@ export function IssueSummaryChart({
                       </div>
                     </td>
                     <td className="py-2 text-right font-medium">{sev.count}</td>
+                    {patterns && (
+                      <td className="py-2 text-right text-muted-foreground">
+                        {sev.patternCount}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
