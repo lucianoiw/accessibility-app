@@ -37,7 +37,9 @@ src/
 │   │   │       ├── cancel/   # POST cancelar auditoria via Trigger.dev
 │   │   │       └── emag/     # GET avaliacao eMAG
 │   │   ├── health/           # Health check endpoint
-│   │   ├── projects/[id]/auth/  # Configuracao de autenticacao de sites
+│   │   ├── projects/[id]/
+│   │   │   ├── auth/         # Configuracao de autenticacao de sites
+│   │   │   └── schedule/     # GET/PUT/DELETE configuracao de agendamento
 │   │   ├── reports/          # API de relatorios (PDF, etc)
 │   │   └── violations/[id]/  # Sugestoes e verificacao de violacoes
 │   └── auth/                 # Callbacks de autenticacao Supabase
@@ -86,7 +88,8 @@ src/
 │   ├── validations.ts        # Schemas Zod para validacao de entrada
 │   └── csrf.ts               # Protecao CSRF via Origin/Host
 ├── trigger/
-│   └── audit.ts              # Task Trigger.dev com loop iterativo
+│   ├── audit.ts              # Task Trigger.dev com loop iterativo
+│   └── scheduled-audit.ts    # Task agendada (cron) para verificar projetos
 └── types/
     ├── index.ts              # Tipos compartilhados (inclui BrokenPage, BrokenPageErrorType)
     └── database.ts           # Tipos gerados do Supabase
@@ -140,6 +143,7 @@ type BrokenPageErrorType =
 interface Audit {
   // ... campos padrao ...
   trigger_run_id: string | null  // ID do run no Trigger.dev (para cancelamento)
+  is_scheduled: boolean          // true se auditoria foi iniciada por agendamento
   status: 'PENDING' | 'CRAWLING' | 'AUDITING' | 'AGGREGATING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
 }
 ```
@@ -221,7 +225,7 @@ yarn test:coverage # Rodar testes com cobertura
 - **React Testing**: @testing-library/react + @testing-library/user-event
 - **Mocking**: vi.mock, vi.hoisted (para mocks hoisted)
 
-### Cobertura Atual (~757 testes em 42 arquivos)
+### Cobertura Atual (~850 testes em 46 arquivos)
 
 | Area | Statements | Linhas |
 |------|-----------|--------|
@@ -237,6 +241,12 @@ yarn test:coverage # Rodar testes com cobertura
 __tests__/
 ├── components/
 │   ├── audit/              # Componentes de auditoria
+│   │   ├── comparison/     # Componentes de comparacao
+│   │   │   ├── comparison-insights.test.tsx
+│   │   │   ├── delta-badge.test.tsx
+│   │   │   └── trend-indicator.test.tsx
+│   │   ├── evolution/      # Componentes de evolucao
+│   │   │   └── period-selector.test.tsx
 │   │   ├── scan-logs.test.tsx
 │   │   ├── score-card.test.tsx
 │   │   └── score-modal.test.tsx
@@ -388,8 +398,11 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 - [x] Redirecionamento para lista apos cancelamento
 - [x] Card especifico para auditorias canceladas
 
-### Comparacao e Evolucao de Auditorias (Sprint 1 - Backend)
+### Comparacao e Evolucao de Auditorias
 
+Sistema completo para comparar auditorias e visualizar evolucao do score ao longo do tempo.
+
+**Backend:**
 - [x] Campos `health_score` e `previous_audit_id` na tabela `audits`
 - [x] Tabela `audit_comparisons` para cache de comparacoes
 - [x] Tabela `violation_changes` para detalhes de mudancas
@@ -404,18 +417,67 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 - [x] Suporte a periodos (7d, 30d, 90d, 1y, all)
 - [x] Tipos TypeScript completos para todas as estruturas
 
-**Arquivos criados:**
+**Frontend:**
+- [x] Componentes UI: DeltaBadge, TrendIndicator, PeriodSelector, ComparisonInsights
+- [x] ComparisonCard com resumo de mudancas e insights
+- [x] EvolutionChart com grafico de evolucao (Recharts)
+- [x] ProjectEvolutionSection integrando comparacao e evolucao
+- [x] Pagina de comparacao detalhada (`/projects/[id]/audits/[auditId]/compare`)
+- [x] Botao "Comparar" na pagina de resultados da auditoria
+- [x] Tratamento de erros com ErrorCard e cleanup de requisicoes
+- [x] Validacao de entrada para parametro `period`
+- [x] Traducoes completas (pt-BR, en, es) - namespaces AuditComparison, AuditEvolution
+- [x] 55 testes unitarios para componentes de comparacao/evolucao
+
+**Arquivos principais:**
 - `supabase/migrations/00015_add_audit_comparison.sql`
 - `src/lib/audit/comparison.ts` - Logica de comparacao
 - `src/lib/audit/insights.ts` - Geracao de insights e tendencias
 - `src/app/api/audits/[id]/comparison/route.ts`
 - `src/app/api/projects/[id]/evolution/route.ts`
+- `src/components/audit/comparison/` - DeltaBadge, TrendIndicator, ComparisonCard, ComparisonInsights
+- `src/components/audit/evolution/` - EvolutionChart, PeriodSelector
+- `src/app/[locale]/(dashboard)/projects/[id]/project-evolution-section.tsx`
+- `src/app/[locale]/(dashboard)/projects/[id]/audits/[auditId]/compare/page.tsx`
 
-**Proximos passos (Sprint 2+):**
-- [ ] Componentes UI: DeltaBadge, TrendIndicator, ComparisonCard, EvolutionChart
-- [ ] Pagina de comparacao detalhada
-- [ ] Integracao no dashboard do projeto
-- [ ] Traducoes (AuditComparison, AuditEvolution)
+### Auditorias Agendadas (Cron)
+
+Sistema de agendamento automatico de auditorias usando Trigger.dev scheduled tasks.
+
+- [x] Campos de agendamento na tabela `projects`:
+  - `schedule_enabled` - Ativar/desativar agendamento
+  - `schedule_frequency` - Frequencia (daily, weekly, monthly)
+  - `schedule_day_of_week` - Dia da semana (0-6, para weekly)
+  - `schedule_day_of_month` - Dia do mes (1-31, para monthly)
+  - `schedule_hour` - Hora do dia (0-23)
+  - `schedule_timezone` - Fuso horario (ex: America/Sao_Paulo)
+  - `last_scheduled_audit_at` - Ultima execucao
+  - `next_scheduled_audit_at` - Proxima execucao (calculada automaticamente)
+- [x] Campo `is_scheduled` na tabela `audits` para diferenciar manual vs agendada
+- [x] Funcao PostgreSQL `calculate_next_scheduled_audit()` com trigger automatico
+- [x] Task agendada `check-scheduled-audits` (cron: `0 * * * *` - a cada hora)
+- [x] Verificacao de auditorias ja em andamento antes de iniciar nova
+- [x] Snapshot da configuracao do projeto no momento da auditoria
+- [x] API `GET/PUT/DELETE /api/projects/[id]/schedule` para gerenciar agendamento
+- [x] UI de configuracao em `/projects/[id]/settings/schedule`
+- [x] Badge visual em projetos com agendamento ativo
+- [x] Badge visual em auditorias agendadas vs manuais
+- [x] Traducoes completas (pt-BR, en, es)
+
+**Arquivos criados:**
+- `supabase/migrations/00016_add_scheduled_audits.sql`
+- `src/trigger/scheduled-audit.ts` - Task agendada do Trigger.dev
+- `src/app/api/projects/[id]/schedule/route.ts` - API de agendamento
+- `src/app/[locale]/(dashboard)/projects/[id]/settings/schedule/page.tsx`
+- `src/app/[locale]/(dashboard)/projects/[id]/settings/schedule/schedule-settings-form.tsx`
+
+**Como funciona:**
+1. Usuario configura frequencia, dia e hora em Settings > Schedule
+2. Trigger do banco calcula `next_scheduled_audit_at` automaticamente
+3. Task `check-scheduled-audits` roda a cada hora
+4. Busca projetos com `schedule_enabled=true` e `next_scheduled_audit_at <= now()`
+5. Cria auditoria com `is_scheduled=true` e dispara `runAuditTask`
+6. Atualiza `last_scheduled_audit_at` e trigger recalcula proximo agendamento
 
 ### Gestao de Violacoes
 
@@ -507,7 +569,7 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 - [x] Client Components com `useTranslations()`
 - [x] Link e useRouter tipados via `@/i18n/navigation`
 
-**Namespaces de traducao (40 namespaces):**
+**Namespaces de traducao (44 namespaces):**
 
 | Namespace | Descricao |
 |-----------|-----------|
@@ -524,6 +586,8 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 | `AuditComponents` | Componentes de auditoria |
 | `AuditStatus` | Status de auditoria |
 | `AuditFailed` | Mensagens de erro de auditoria |
+| `AuditComparison` | Comparacao entre auditorias |
+| `AuditEvolution` | Evolucao e tendencias de auditorias |
 | `StartAudit` | Modal de iniciar auditoria |
 | `Violations` | Lista de violacoes e filtros |
 | `ViolationsFilter` | Filtros avancados de violacoes |
@@ -552,6 +616,8 @@ SUPABASE_SERVICE_ROLE_KEY=      # Para operacoes admin (bypassa RLS)
 | `UserMenu` | Menu do usuario |
 | `Errors` | Mensagens de erro |
 | `Metadata` | Metadados da aplicacao |
+| `ScheduleSettings` | Configuracao de agendamento de auditorias |
+| `DaysOfWeek` | Dias da semana para agendamento |
 
 ### Dashboard de Saude da Acessibilidade
 
@@ -625,10 +691,12 @@ O que temos que **nenhum concorrente internacional** (Siteimprove, Deque, Level 
 
 Concorrentes (Siteimprove, Deque) oferecem varredura automatica diaria/semanal.
 
-- [ ] **Auditorias agendadas (cron)** - Trigger.dev scheduled tasks
+- [x] **Auditorias agendadas (cron)** - Trigger.dev scheduled tasks ✅ IMPLEMENTADO
   - Frequencia configuravel: diaria, semanal, mensal
   - Horario customizavel por projeto
   - Pausar/retomar agendamento
+  - Fuso horario configuravel
+  - Badge visual para projetos e auditorias agendadas
 - [ ] **Dashboard de tendencias**
   - Grafico de evolucao do score ao longo do tempo
   - Comparacao entre auditorias (delta de violacoes)

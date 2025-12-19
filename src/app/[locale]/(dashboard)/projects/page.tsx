@@ -8,11 +8,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Link } from '@/i18n/navigation'
+import { Clock } from 'lucide-react'
 import type { Project } from '@/types'
 
 export default async function ProjectsPage() {
   const t = await getTranslations('Project')
+  const tSchedule = await getTranslations('ScheduleSettings')
   const supabase = await createClient()
 
   const { data: projects } = await supabase
@@ -40,10 +47,27 @@ export default async function ProjectsPage() {
             <Link key={project.id} href={`/projects/${project.id}`}>
               <Card className="hover:border-primary transition-colors cursor-pointer">
                 <CardHeader>
-                  <CardTitle className="text-lg">{project.name}</CardTitle>
-                  <CardDescription className="truncate">
-                    {project.base_url}
-                  </CardDescription>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-lg">{project.name}</CardTitle>
+                      <CardDescription className="truncate">
+                        {project.base_url}
+                      </CardDescription>
+                    </div>
+                    {project.schedule_enabled && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium">
+                            <Clock className="h-3 w-3" />
+                            <span className="sr-only sm:not-sr-only">{tSchedule('scheduled')}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {tSchedule('scheduledTooltip')}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">

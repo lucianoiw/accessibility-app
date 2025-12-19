@@ -5,7 +5,7 @@ import { usePathname, useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/utils'
-import { Settings, KeyRound, Sliders, Trash2, Search } from 'lucide-react'
+import { Settings, KeyRound, Sliders, Trash2, Search, Clock } from 'lucide-react'
 
 export default function ProjectSettingsLayout({ children }: PropsWithChildren) {
   const pathname = usePathname()
@@ -34,6 +34,11 @@ export default function ProjectSettingsLayout({ children }: PropsWithChildren) {
       titleKey: 'defaults',
       href: '/defaults',
       icon: Sliders,
+    },
+    {
+      titleKey: 'schedule',
+      href: '/schedule',
+      icon: Clock,
     },
   ]
 

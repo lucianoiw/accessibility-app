@@ -615,54 +615,54 @@ export function generateInsights(
 
 ## 7. Ordem de Implementação
 
-### Sprint 1: Fundação (Banco + APIs)
+### Sprint 1: Fundação (Banco + APIs) ✅
 
-1. [ ] Criar migration para novas tabelas (`audit_comparisons`, `violation_changes`)
-2. [ ] Adicionar campo `health_score` na tabela `audits`
-3. [ ] Atualizar Trigger.dev task para calcular e salvar `health_score`
-4. [ ] Implementar `src/lib/audit/comparison.ts`
-5. [ ] Implementar `src/lib/audit/insights.ts`
-6. [ ] Criar API `GET /api/audits/[id]/comparison`
-7. [ ] Criar API `GET /api/projects/[id]/evolution`
-8. [ ] Adicionar tipos em `src/types/index.ts`
+1. [x] Criar migration para novas tabelas (`audit_comparisons`, `violation_changes`)
+2. [x] Adicionar campo `health_score` na tabela `audits`
+3. [x] Atualizar Trigger.dev task para calcular e salvar `health_score`
+4. [x] Implementar `src/lib/audit/comparison.ts`
+5. [x] Implementar `src/lib/audit/insights.ts`
+6. [x] Criar API `GET /api/audits/[id]/comparison`
+7. [x] Criar API `GET /api/projects/[id]/evolution`
+8. [x] Adicionar tipos em `src/types/index.ts`
 
-### Sprint 2: Componentes Base
+### Sprint 2: Componentes Base ✅
 
-1. [ ] Criar componente `DeltaBadge`
-2. [ ] Criar componente `TrendIndicator`
-3. [ ] Criar componente `PeriodSelector`
-4. [ ] Criar componente `ComparisonInsights`
-5. [ ] Adicionar traduções `AuditComparison` (pt-BR, en, es)
-6. [ ] Adicionar traduções `AuditEvolution` (pt-BR, en, es)
-7. [ ] Escrever testes para componentes
+1. [x] Criar componente `DeltaBadge`
+2. [x] Criar componente `TrendIndicator`
+3. [x] Criar componente `PeriodSelector`
+4. [x] Criar componente `ComparisonInsights`
+5. [x] Adicionar traduções `AuditComparison` (pt-BR, en, es)
+6. [x] Adicionar traduções `AuditEvolution` (pt-BR, en, es)
+7. [x] Escrever testes para componentes (55 testes)
 
-### Sprint 3: Dashboard do Projeto
+### Sprint 3: Dashboard do Projeto ✅
 
-1. [ ] Criar componente `ComparisonCard`
-2. [ ] Criar componente `EvolutionChart` (Recharts LineChart)
-3. [ ] Criar componente `EvolutionCard`
-4. [ ] Integrar `ComparisonCard` no dashboard do projeto
-5. [ ] Integrar `EvolutionCard` no dashboard do projeto
-6. [ ] Escrever testes para componentes
+1. [x] Criar componente `ComparisonCard`
+2. [x] Criar componente `EvolutionChart` (Recharts LineChart)
+3. [x] Criar componente `EvolutionCard` (integrado no EvolutionChart)
+4. [x] Integrar `ComparisonCard` no dashboard do projeto (via ProjectEvolutionSection)
+5. [x] Integrar `EvolutionCard` no dashboard do projeto (via ProjectEvolutionSection)
+6. [x] Escrever testes para componentes
 
-### Sprint 4: Página de Comparação
+### Sprint 4: Página de Comparação ✅
 
-1. [ ] Criar página `/projects/[id]/audits/[auditId]/compare`
-2. [ ] Criar componente `ComparisonHeader` (seletor de auditoria)
-3. [ ] Criar componente `DeltaSummary`
-4. [ ] Criar componente `ViolationChangesList`
-5. [ ] Criar tabs de mudanças (novas, corrigidas, etc)
-6. [ ] Integrar tudo na página
-7. [ ] Escrever testes
+1. [x] Criar página `/projects/[id]/audits/[auditId]/compare`
+2. [x] Criar componente `ComparisonHeader` (seletor de auditoria)
+3. [x] Criar componente `DeltaSummary`
+4. [x] Criar componente `ViolationChangesList`
+5. [x] Criar tabs de mudanças (novas, corrigidas, etc)
+6. [x] Integrar tudo na página
+7. [x] Escrever testes
 
-### Sprint 5: Refinamentos
+### Sprint 5: Refinamentos ✅
 
-1. [ ] Atualizar página de resultados da auditoria com botão "Comparar"
-2. [ ] Adicionar badge de comparação no header da auditoria
-3. [ ] Polir UX/UI baseado em feedback
-4. [ ] Otimizar queries para performance
-5. [ ] Adicionar loading states e error handling
-6. [ ] Testes E2E
+1. [x] Atualizar página de resultados da auditoria com botão "Comparar"
+2. [x] Adicionar badge de comparação no header da auditoria
+3. [x] Polir UX/UI baseado em feedback
+4. [x] Otimizar queries para performance
+5. [x] Adicionar loading states e error handling
+6. [ ] Testes E2E (pendente - requer Playwright)
 
 ---
 

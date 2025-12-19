@@ -70,7 +70,9 @@
     "audits": "Audits",
     "reports": "Reports",
     "openMenu": "Open menu",
-    "new": "New"
+    "new": "New",
+    "compare": "Compare",
+    "results": "Results"
   },
   "Dashboard": {
     "title": "Dashboard",
@@ -143,6 +145,7 @@
     "domains": "Domains",
     "defaults": "Audit Defaults",
     "discovery": "Page Discovery",
+    "schedule": "Schedule",
     "dangerZone": "Danger Zone"
   },
   "ProjectInfo": {
@@ -187,7 +190,11 @@
     "auditInProgress": "Audit in progress...",
     "auditNotFound": "Audit not found",
     "recalculatePatterns": "Recalculate patterns",
-    "recalculating": "Recalculating..."
+    "recalculating": "Recalculating...",
+    "deleteAudit": "Delete audit",
+    "deleteAuditConfirmTitle": "Delete this audit?",
+    "deleteAuditConfirmDescription": "This action is irreversible. All audit data, including violations, audited pages and reports, will be permanently deleted.",
+    "latest": "Latest"
   },
   "AuditStatus": {
     "pending": "Pending",
@@ -323,7 +330,8 @@
     "forbidden": "Access denied",
     "serverError": "Server error",
     "networkError": "Connection error",
-    "validationError": "Validation error"
+    "validationError": "Validation error",
+    "loadError": "Failed to load data. Please try again."
   },
   "Health": {
     "title": "Accessibility Health",
@@ -871,6 +879,9 @@
     "compareWith": "Compare with another",
     "previousAudit": "Previous audit",
     "currentAudit": "Current audit",
+    "fixed": "fixed",
+    "new": "new",
+    "stable": "Stable",
     "delta": {
       "new": "New",
       "fixed": "Fixed",
@@ -955,5 +966,39 @@
       "recentDrop": "Recent drop: {count} violations fixed in the last audit",
       "criticalTrend": "Critical issues trend: {direction}"
     }
+  },
+  "ScheduleSettings": {
+    "title": "Audit Scheduling",
+    "description": "Configure automatic audits for this project",
+    "enableSchedule": "Enable automatic scheduling",
+    "enableScheduleHelp": "When enabled, audits will run automatically at the configured frequency",
+    "frequency": "Frequency",
+    "frequencyDaily": "Daily",
+    "frequencyWeekly": "Weekly",
+    "frequencyMonthly": "Monthly",
+    "dayOfWeek": "Day of week",
+    "dayOfMonth": "Day of month",
+    "dayNumber": "Day {day}",
+    "dayOfMonthWarning": "Months with fewer than {day} days will run on the last day",
+    "hour": "Time",
+    "timezone": "Timezone",
+    "scheduleStatus": "Schedule status",
+    "nextRun": "Next run",
+    "lastRun": "Last run",
+    "savedSuccess": "Schedule saved successfully!",
+    "neverRun": "Never run",
+    "scheduled": "Scheduled",
+    "scheduledTooltip": "This project has scheduled audits",
+    "scheduledAudit": "Scheduled",
+    "scheduledAuditTooltip": "This audit was automatically run by the schedule"
+  },
+  "DaysOfWeek": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
   }
 }

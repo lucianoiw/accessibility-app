@@ -70,7 +70,9 @@
     "audits": "Auditorias",
     "reports": "Informes",
     "openMenu": "Abrir menu",
-    "new": "Nuevo"
+    "new": "Nuevo",
+    "compare": "Comparar",
+    "results": "Resultados"
   },
   "Dashboard": {
     "title": "Panel",
@@ -143,6 +145,7 @@
     "domains": "Dominios",
     "defaults": "Valores por Defecto",
     "discovery": "Descubrimiento de Paginas",
+    "schedule": "Programacion",
     "dangerZone": "Zona de Peligro"
   },
   "ProjectInfo": {
@@ -185,7 +188,13 @@
     "auditDetails": "Detalles de la Auditoria",
     "viewResults": "Ver resultados",
     "auditInProgress": "Auditoria en progreso...",
-    "auditNotFound": "Auditoria no encontrada"
+    "auditNotFound": "Auditoria no encontrada",
+    "recalculatePatterns": "Recalcular patrones",
+    "recalculating": "Recalculando...",
+    "deleteAudit": "Eliminar auditoria",
+    "deleteAuditConfirmTitle": "Eliminar esta auditoria?",
+    "deleteAuditConfirmDescription": "Esta accion es irreversible. Todos los datos de la auditoria, incluyendo violaciones, paginas auditadas e informes, seran eliminados permanentemente.",
+    "latest": "Mas reciente"
   },
   "AuditStatus": {
     "pending": "Pendiente",
@@ -321,7 +330,8 @@
     "forbidden": "Acceso denegado",
     "serverError": "Error del servidor",
     "networkError": "Error de conexion",
-    "validationError": "Error de validacion"
+    "validationError": "Error de validacion",
+    "loadError": "Error al cargar datos. Intente nuevamente."
   },
   "Health": {
     "title": "Salud de la Accesibilidad",
@@ -869,6 +879,9 @@
     "compareWith": "Comparar con otra",
     "previousAudit": "Auditoria anterior",
     "currentAudit": "Auditoria actual",
+    "fixed": "corregidas",
+    "new": "nuevas",
+    "stable": "Estable",
     "delta": {
       "new": "Nuevos",
       "fixed": "Corregidos",
@@ -953,5 +966,39 @@
       "recentDrop": "Caida reciente: {count} violaciones corregidas en la ultima auditoria",
       "criticalTrend": "Tendencia de problemas criticos: {direction}"
     }
+  },
+  "ScheduleSettings": {
+    "title": "Programacion de Auditorias",
+    "description": "Configure auditorias automaticas para este proyecto",
+    "enableSchedule": "Activar programacion automatica",
+    "enableScheduleHelp": "Cuando esta activo, las auditorias se ejecutaran automaticamente con la frecuencia configurada",
+    "frequency": "Frecuencia",
+    "frequencyDaily": "Diariamente",
+    "frequencyWeekly": "Semanalmente",
+    "frequencyMonthly": "Mensualmente",
+    "dayOfWeek": "Dia de la semana",
+    "dayOfMonth": "Dia del mes",
+    "dayNumber": "Dia {day}",
+    "dayOfMonthWarning": "Meses con menos de {day} dias se ejecutaran el ultimo dia",
+    "hour": "Horario",
+    "timezone": "Zona horaria",
+    "scheduleStatus": "Estado de la programacion",
+    "nextRun": "Proxima ejecucion",
+    "lastRun": "Ultima ejecucion",
+    "savedSuccess": "Programacion guardada con exito!",
+    "neverRun": "Nunca ejecutado",
+    "scheduled": "Programado",
+    "scheduledTooltip": "Este proyecto tiene auditorias programadas",
+    "scheduledAudit": "Programada",
+    "scheduledAuditTooltip": "Esta auditoria fue ejecutada automaticamente por la programacion"
+  },
+  "DaysOfWeek": {
+    "sunday": "Domingo",
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miercoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sabado"
   }
 }

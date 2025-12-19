@@ -141,8 +141,8 @@ export function ExportButton({ auditId, projectId, showEmag = false, disabled }:
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={disabled}>
-          <Download className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" disabled={disabled}>
+          <Download />
           {t('export')}
         </Button>
       </DropdownMenuTrigger>

@@ -20,3 +20,6 @@ export { ConformanceTabs } from './conformance-tabs'
 
 // Scan Logs - Tabela de historico de scans
 export { ScanLogs } from './scan-logs'
+
+// Delete Audit Button - Botao com confirmacao para excluir auditoria
+export { DeleteAuditButton } from './delete-audit-button'

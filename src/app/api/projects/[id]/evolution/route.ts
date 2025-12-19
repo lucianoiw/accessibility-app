@@ -9,7 +9,10 @@ interface Props {
 }
 
 // Periodos suportados em dias
-const PERIOD_DAYS: Record<string, number | null> = {
+const ALLOWED_PERIODS = ['7d', '30d', '90d', '1y', 'all'] as const
+type Period = typeof ALLOWED_PERIODS[number]
+
+const PERIOD_DAYS: Record<Period, number | null> = {
   '7d': 7,
   '30d': 30,
   '90d': 90,
@@ -17,11 +20,16 @@ const PERIOD_DAYS: Record<string, number | null> = {
   'all': null,
 }
 
+function isValidPeriod(value: string): value is Period {
+  return ALLOWED_PERIODS.includes(value as Period)
+}
+
 export async function GET(request: Request, { params }: Props) {
   try {
     const { id } = await params
     const { searchParams } = new URL(request.url)
-    const period = searchParams.get('period') || '30d'
+    const periodParam = searchParams.get('period') || '30d'
+    const period: Period = isValidPeriod(periodParam) ? periodParam : '30d'
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50)
 
     const supabase = await createClient()

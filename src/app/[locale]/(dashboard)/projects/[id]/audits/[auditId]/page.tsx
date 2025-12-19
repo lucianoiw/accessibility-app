@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   Ban,
   ChevronDown,
+  GitCompare,
   Info,
 } from 'lucide-react'
 
@@ -42,6 +43,7 @@ import {
   CategoryChart,
   ConformanceTabs,
   ScanLogs,
+  DeleteAuditButton,
 } from '@/components/audit'
 
 interface Props {
@@ -194,9 +196,22 @@ export default async function AuditResultsPage({ params }: Props) {
             {new Date(audit.created_at).toLocaleDateString(locale)}
           </p>
         </div>
-        {audit.status === 'COMPLETED' && (
-          <ExportButton auditId={auditId} projectId={id} showEmag={audit.include_emag} />
-        )}
+        <div className="flex items-center gap-2">
+          {audit.status === 'COMPLETED' && (
+            <>
+              <Link href={`/projects/${id}/audits/${auditId}/compare`}>
+                <Button variant="outline" size="sm">
+                  <GitCompare className="h-4 w-4 mr-2" />
+                  {tNav('compare')}
+                </Button>
+              </Link>
+              <ExportButton auditId={auditId} projectId={id} showEmag={audit.include_emag} />
+            </>
+          )}
+          {!isInProgress && (
+            <DeleteAuditButton auditId={auditId} projectId={id} />
+          )}
+        </div>
       </div>
 
       {/* Status */}

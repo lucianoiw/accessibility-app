@@ -39,6 +39,8 @@ export type TrendDirection = 'up' | 'down' | 'stable'
 
 export type InsightType = 'positive' | 'negative' | 'neutral' | 'warning'
 
+export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly'
+
 // ============================================
 // Discovery Config Types
 // ============================================
@@ -145,6 +147,15 @@ export interface Project {
   auth_config: AuthConfig | null
   subdomain_policy: SubdomainPolicy
   allowed_subdomains: string[] | null
+  // Configuração de agendamento
+  schedule_enabled: boolean
+  schedule_frequency: ScheduleFrequency
+  schedule_day_of_week: number // 0-6 (Dom-Sab)
+  schedule_day_of_month: number // 1-31
+  schedule_hour: number // 0-23
+  schedule_timezone: string
+  last_scheduled_audit_at: string | null
+  next_scheduled_audit_at: string | null
   created_at: string
   updated_at: string
 }
@@ -186,6 +197,8 @@ export interface Audit {
   // Score e comparacao
   health_score: number | null
   previous_audit_id: string | null
+  // Agendamento
+  is_scheduled: boolean
   // Timestamps
   started_at: string | null
   completed_at: string | null

@@ -158,6 +158,57 @@ export const SubdomainPolicySchema = z.object({
 
 export type SubdomainPolicyInput = z.infer<typeof SubdomainPolicySchema>
 
+// ============================================
+// Schedule Config Schema
+// ============================================
+
+/**
+ * Lista de timezones válidos (principais)
+ */
+const VALID_TIMEZONES = [
+  'America/Sao_Paulo',
+  'America/Fortaleza',
+  'America/Manaus',
+  'America/Rio_Branco',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Australia/Sydney',
+  'UTC',
+] as const
+
+/**
+ * Schema para configuração de agendamento de auditorias
+ */
+export const ScheduleConfigSchema = z.object({
+  schedule_enabled: z.boolean(),
+  schedule_frequency: z.enum(['daily', 'weekly', 'monthly']),
+  schedule_day_of_week: z.number().int().min(0).max(6), // 0=Dom, 6=Sab
+  schedule_day_of_month: z.number().int().min(1).max(31),
+  schedule_hour: z.number().int().min(0).max(23),
+  schedule_timezone: z.string().refine(
+    (tz) => VALID_TIMEZONES.includes(tz as typeof VALID_TIMEZONES[number]) ||
+      // Aceitar qualquer timezone IANA válido
+      /^[A-Za-z_]+\/[A-Za-z_]+$/.test(tz),
+    'Timezone inválido'
+  ),
+}).refine(
+  (data) => {
+    // Se frequency é weekly, day_of_month não é usado (não validar)
+    // Se frequency é daily, tanto day_of_week quanto day_of_month não são usados
+    // Se frequency é monthly e day_of_month > 28, avisar sobre meses curtos
+    return true
+  }
+)
+
+export type ScheduleConfigInput = z.infer<typeof ScheduleConfigSchema>
+
 /**
  * Schema para atualização de status de violação
  */
