@@ -807,8 +807,8 @@ export const runAuditTask = task({
     // Calcular health score usando fórmula BrowserStack
     // IMPORTANTE: Usar PADRÕES ÚNICOS, não ocorrências brutas
     // Isso reflete o "esforço real" de correção (1 fix no template corrige N ocorrências)
-    // axe-core executa ~100 regras, usamos isso como base para estimar passed rules
-    const TOTAL_RULES_ESTIMATE = 100
+    // axe-core executa ~100 regras + 27 regras customizadas = ~127, arredondamos para 130
+    const TOTAL_RULES_ESTIMATE = 130
     const failedByPatterns = {
       critical: summary.patterns?.critical ?? summary.critical,
       serious: summary.patterns?.serious ?? summary.serious,

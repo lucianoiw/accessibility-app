@@ -96,6 +96,8 @@ export async function GET(request: Request, { params }: Props) {
     }
 
     // Construir resposta da auditoria atual
+    // NOTA: Para auditorias antigas sem health_score, recalculamos usando a fórmula atual
+    // Isso garante consistência nas comparações (mesma fórmula para ambas as auditorias)
     const currentSummary: AuditComparisonSummary = {
       id: audit.id,
       createdAt: audit.created_at,
@@ -188,6 +190,7 @@ export async function GET(request: Request, { params }: Props) {
     )
 
     // Construir resposta da auditoria anterior
+    // NOTA: Mesmo tratamento de fallback para garantir comparação justa
     const previousSummary: AuditComparisonSummary = {
       id: previousAudit.id,
       createdAt: previousAudit.created_at,

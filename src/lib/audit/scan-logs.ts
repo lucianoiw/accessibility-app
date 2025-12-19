@@ -19,6 +19,24 @@ export interface ScanLogEntry {
 }
 
 /**
+ * Calcula score individual por página baseado na proporção de violações
+ * Páginas com 0 violações = 100 (perfeito)
+ * Páginas com mais violações = score proporcional entre baseScore e 100
+ */
+function calculatePageScore(
+  violationCount: number,
+  maxViolations: number,
+  baseScore: number
+): number {
+  if (violationCount === 0) return 100
+  if (maxViolations === 0) return baseScore
+
+  // Interpolar entre 100 (sem violações) e baseScore (máximo de violações)
+  const ratio = violationCount / maxViolations
+  return Math.round(100 - (100 - baseScore) * ratio)
+}
+
+/**
  * Converte dados de audit pages e broken pages em ScanLogEntries
  */
 export function createScanLogEntries(
@@ -29,6 +47,12 @@ export function createScanLogEntries(
 ): ScanLogEntry[] {
   const entries: ScanLogEntry[] = []
 
+  // Calcular máximo de violações para normalização do score por página
+  const maxViolations = auditedPages.reduce(
+    (max, page) => Math.max(max, page.violation_count),
+    0
+  )
+
   // Adicionar paginas auditadas com sucesso
   for (const page of auditedPages) {
     entries.push({
@@ -38,7 +62,7 @@ export function createScanLogEntries(
       status: 'success',
       description: `Scan complete, ${page.violation_count} issues found`,
       issueCount: page.violation_count,
-      score: baseScore,
+      score: calculatePageScore(page.violation_count, maxViolations, baseScore),
     })
   }
 

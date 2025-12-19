@@ -135,39 +135,38 @@ describe('calculateHealthScore', () => {
     expect(calculateHealthScore(audit)).toBe(100)
   })
 
-  it('calculates score using exponential decay formula', () => {
-    // Formula V2: health = 100 * e^(-density/DECAY_FACTOR)
-    // where density = penalty / processed_pages
-    // and DECAY_FACTOR = 400
+  it('calculates score using BrowserStack formula', () => {
+    // Formula: Score = (Weighted sum of passed rules / Weighted sum of passed & failed rules) × 100
+    // TOTAL_RULES_ESTIMATE = 130
     //
-    // 10 critical on 1 page:
-    // - penalty = 10 * 10 = 100
-    // - density = 100 / 1 = 100
-    // - health = 100 * e^(-100/400) = 100 * e^(-0.25) ≈ 78
+    // 10 critical violations:
+    // - totalPassed = 130 - 10 = 120
+    // - passedRules distributed: 36 critical, 48 serious, 24 moderate, 12 minor
+    // - weightedPassed = 36*10 + 48*7 + 24*3 + 12*1 = 780
+    // - weightedFailed = 10*20 = 200
+    // - score = round(780 / 980 * 100) = 80
     const audit = createAudit({
       processed_pages: 1,
       summary: { total: 10, critical: 10, serious: 0, moderate: 0, minor: 0 },
     })
-    expect(calculateHealthScore(audit)).toBe(78)
+    expect(calculateHealthScore(audit)).toBe(80)
   })
 
-  it('returns high score when violations are spread across many pages', () => {
-    // 10 critical on 10 pages (1 per page):
-    // - penalty = 10 * 10 = 100
-    // - density = 100 / 10 = 10
-    // - health = 100 * e^(-10/400) = 100 * e^(-0.025) ≈ 98
+  it('returns same score regardless of page spread (patterns-based)', () => {
+    // Com a fórmula BrowserStack, o score é baseado em padrões/regras,
+    // não em densidade por página. Então 10 critical em 1 ou 10 páginas = mesmo score
     const audit = createAudit({
       processed_pages: 10,
       summary: { total: 10, critical: 10, serious: 0, moderate: 0, minor: 0 },
     })
-    expect(calculateHealthScore(audit)).toBe(98)
+    expect(calculateHealthScore(audit)).toBe(80)
   })
 
   it('returns very high score for minor-only violations', () => {
-    // 10 minor on 1 page:
-    // - penalty = 10 * 1 = 10
-    // - density = 10 / 1 = 10
-    // - health = 100 * e^(-10/400) ≈ 98
+    // 10 minor violations:
+    // - weightedPassed = 780 (same as above)
+    // - weightedFailed = 10*2 = 20
+    // - score = round(780 / 800 * 100) = 98
     const audit = createAudit({
       processed_pages: 1,
       summary: { total: 10, critical: 0, serious: 0, moderate: 0, minor: 10 },
@@ -177,9 +176,9 @@ describe('calculateHealthScore', () => {
 
   it('calculates correct score for mixed severities', () => {
     // 2 critical + 3 serious + 3 moderate + 2 minor = 10 total
-    // penalty = 2*10 + 3*7 + 3*3 + 2*1 = 20 + 21 + 9 + 2 = 52
-    // density = 52 / 1 = 52
-    // health = 100 * e^(-52/400) ≈ 88
+    // - weightedPassed = 780
+    // - weightedFailed = 2*20 + 3*14 + 3*6 + 2*2 = 40 + 42 + 18 + 4 = 104
+    // - score = round(780 / 884 * 100) = 88
     const audit = createAudit({
       processed_pages: 1,
       summary: { total: 10, critical: 2, serious: 3, moderate: 3, minor: 2 },
@@ -188,8 +187,10 @@ describe('calculateHealthScore', () => {
   })
 
   it('penalizes critical violations more than others', () => {
-    // Use higher violation counts so differences are visible after rounding
-    // All on 1 page to maximize density differences
+    // BrowserStack formula: pesos maiores para failed = score menor
+    // Critical: FAIL_WEIGHT = 20
+    // Serious: FAIL_WEIGHT = 14
+    // Minor: FAIL_WEIGHT = 2
     const auditCritical = createAudit({
       processed_pages: 1,
       summary: { total: 50, critical: 50, serious: 0, moderate: 0, minor: 0 },
@@ -203,9 +204,9 @@ describe('calculateHealthScore', () => {
       summary: { total: 50, critical: 0, serious: 0, moderate: 0, minor: 50 },
     })
 
-    const scoreCritical = calculateHealthScore(auditCritical) // penalty=500, density=500, score≈29
-    const scoreSerious = calculateHealthScore(auditSerious)   // penalty=350, density=350, score≈42
-    const scoreMinor = calculateHealthScore(auditMinor)       // penalty=50, density=50, score≈88
+    const scoreCritical = calculateHealthScore(auditCritical) // weightedFailed=1000
+    const scoreSerious = calculateHealthScore(auditSerious)   // weightedFailed=700
+    const scoreMinor = calculateHealthScore(auditMinor)       // weightedFailed=100
 
     expect(scoreCritical).toBeLessThan(scoreSerious)
     expect(scoreSerious).toBeLessThan(scoreMinor)

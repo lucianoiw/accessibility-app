@@ -80,9 +80,12 @@ export function EvolutionChart({
     if (!data?.audits || data.audits.length === 0) return []
 
     // Ordenar por data (mais antigo primeiro)
-    const sorted = [...data.audits].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    )
+    // NOTA: Filtramos auditorias sem healthScore para evitar exibir 0% incorretamente
+    const sorted = [...data.audits]
+      .filter((audit) => audit.healthScore !== null && audit.healthScore !== undefined)
+      .sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
 
     return sorted.map((audit) => {
       const date = new Date(audit.createdAt)
@@ -101,7 +104,7 @@ export function EvolutionChart({
           hour: '2-digit',
           minute: '2-digit',
         }),
-        healthScore: audit.healthScore ?? 0,
+        healthScore: audit.healthScore ?? 0, // Já filtrado, então nunca será null
         critical: audit.summary?.critical ?? 0,
         serious: audit.summary?.serious ?? 0,
         moderate: audit.summary?.moderate ?? 0,

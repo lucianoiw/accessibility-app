@@ -23,6 +23,8 @@ import { BrokenPagesCard } from './broken-pages-card'
 import {
   getCategoriesSortedByCount,
   createScanLogEntries,
+  calculateAccessibilityScore,
+  calculateRulesFromAudit,
   type SeverityBreakdown,
 } from '@/lib/audit'
 import { calculateSeverityPatternSummary } from '@/lib/audit/pattern-grouping'
@@ -130,19 +132,16 @@ export default async function AuditResultsPage({ params }: Props) {
   // O health_score é calculado pelo trigger usando a mesma fórmula
   const savedHealthScore = audit.health_score ?? 0
 
-  // Criar scoreData compatível com ScoreCard usando o health_score do banco
+  // Calcular scoreData completo usando a mesma lógica do Trigger
+  // axe-core executa ~100 regras + 27 customizadas = ~127, arredondamos para 130
+  const TOTAL_RULES_ESTIMATE = 130
+  const { passedRules, failedRules } = calculateRulesFromAudit(TOTAL_RULES_ESTIMATE, failedByImpact)
+  const calculatedScoreData = calculateAccessibilityScore(passedRules, failedRules)
+
+  // Usar score do banco mas com breakdown calculado corretamente
   const scoreData = {
-    score: savedHealthScore,
-    passedRules: { critical: 0, serious: 0, moderate: 0, minor: 0 },
-    failedRules: failedByImpact,
-    scoreImpact: {
-      critical: -failedByImpact.critical * 10,
-      serious: -failedByImpact.serious * 7,
-      moderate: -failedByImpact.moderate * 3,
-      minor: -failedByImpact.minor * 1,
-    },
-    weightedPassed: 0,
-    weightedFailed: failedByImpact.critical * 10 + failedByImpact.serious * 7 + failedByImpact.moderate * 3 + failedByImpact.minor * 1,
+    ...calculatedScoreData,
+    score: savedHealthScore, // Manter score do banco para consistência
   }
 
   // Calcular issue counts por severidade

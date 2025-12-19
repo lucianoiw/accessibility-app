@@ -88,6 +88,8 @@ export async function GET(request: Request, { params }: Props) {
     }>
 
     // Transformar para o tipo de resposta
+    // NOTA: Para auditorias antigas sem health_score, recalculamos usando a fórmula atual
+    // Isso garante consistência no gráfico de evolução (mesma fórmula para todas as auditorias)
     const evolutionAudits: EvolutionAudit[] = audits.map((a) => ({
       id: a.id,
       createdAt: a.created_at,

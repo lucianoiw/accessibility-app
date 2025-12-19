@@ -116,8 +116,8 @@ export function calculateHealthScore(audit: Audit): number {
   // Usar fórmula BrowserStack: proporção de regras passed vs failed
   // IMPORTANTE: Usar PADRÕES ÚNICOS quando disponível, não ocorrências brutas
   // Isso reflete o "esforço real" de correção (1 fix no template corrige N ocorrências)
-  // axe-core executa ~100 regras, usamos isso como base para estimar passed rules
-  const TOTAL_RULES_ESTIMATE = 100
+  // axe-core executa ~100 regras + 27 regras customizadas = ~127, arredondamos para 130
+  const TOTAL_RULES_ESTIMATE = 130
   const failedByPatterns = {
     critical: patterns?.critical ?? critical,
     serious: patterns?.serious ?? serious,
