@@ -85,3 +85,50 @@ COMMENT ON FUNCTION calculate_next_scheduled_audit IS
 'Calcula o próximo horário de execução de auditoria agendada.
 Inclui margem de 1 minuto para evitar race condition quando
 o projeto é atualizado exatamente no horário do agendamento.';
+
+-- ============================================
+-- FIX #2: Trigger mais confiável
+-- ============================================
+-- O trigger original usava UPDATE OF que pode não disparar
+-- de forma confiável com Supabase (otimizações do driver).
+-- Nova abordagem: usar WHEN clause para garantir que dispara
+-- sempre que as configurações de agendamento mudam.
+
+DROP TRIGGER IF EXISTS trg_update_next_scheduled_audit ON projects;
+
+CREATE OR REPLACE FUNCTION update_next_scheduled_audit()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Sempre recalcular quando schedule_enabled é TRUE
+  IF NEW.schedule_enabled THEN
+    NEW.next_scheduled_audit_at := calculate_next_scheduled_audit(
+      NEW.schedule_frequency,
+      NEW.schedule_day_of_week,
+      NEW.schedule_day_of_month,
+      NEW.schedule_hour,
+      NEW.schedule_timezone
+    );
+  ELSE
+    NEW.next_scheduled_audit_at := NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger que dispara em qualquer INSERT/UPDATE quando as configs mudam
+CREATE TRIGGER trg_update_next_scheduled_audit
+  BEFORE INSERT OR UPDATE
+  ON projects
+  FOR EACH ROW
+  WHEN (
+    -- Dispara no INSERT
+    (TG_OP = 'INSERT') OR
+    -- Ou quando qualquer campo de agendamento muda
+    (OLD.schedule_enabled IS DISTINCT FROM NEW.schedule_enabled) OR
+    (OLD.schedule_frequency IS DISTINCT FROM NEW.schedule_frequency) OR
+    (OLD.schedule_day_of_week IS DISTINCT FROM NEW.schedule_day_of_week) OR
+    (OLD.schedule_day_of_month IS DISTINCT FROM NEW.schedule_day_of_month) OR
+    (OLD.schedule_hour IS DISTINCT FROM NEW.schedule_hour) OR
+    (OLD.schedule_timezone IS DISTINCT FROM NEW.schedule_timezone)
+  )
+  EXECUTE FUNCTION update_next_scheduled_audit();
