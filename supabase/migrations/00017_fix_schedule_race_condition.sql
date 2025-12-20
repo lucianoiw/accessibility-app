@@ -115,15 +115,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger que dispara em qualquer INSERT/UPDATE quando as configs mudam
-CREATE TRIGGER trg_update_next_scheduled_audit
-  BEFORE INSERT OR UPDATE
+-- Trigger separado para INSERT (sempre dispara)
+CREATE TRIGGER trg_update_next_scheduled_audit_insert
+  BEFORE INSERT
+  ON projects
+  FOR EACH ROW
+  EXECUTE FUNCTION update_next_scheduled_audit();
+
+-- Trigger para UPDATE (só dispara quando configs mudam)
+CREATE TRIGGER trg_update_next_scheduled_audit_update
+  BEFORE UPDATE
   ON projects
   FOR EACH ROW
   WHEN (
-    -- Dispara no INSERT
-    (TG_OP = 'INSERT') OR
-    -- Ou quando qualquer campo de agendamento muda
     (OLD.schedule_enabled IS DISTINCT FROM NEW.schedule_enabled) OR
     (OLD.schedule_frequency IS DISTINCT FROM NEW.schedule_frequency) OR
     (OLD.schedule_day_of_week IS DISTINCT FROM NEW.schedule_day_of_week) OR
