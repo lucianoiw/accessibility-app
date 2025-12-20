@@ -1030,5 +1030,108 @@
       "positive": "Positive indicator",
       "negative": "Uncertainty indicator"
     }
+  },
+  "IGT": {
+    "title": "Guided Tests",
+    "description": "Semi-automated tests to validate cases that automation cannot resolve",
+    "backToAudit": "Back to audit",
+    "backToList": "Back to list",
+    "noIGTsAvailable": "No tests available for this audit",
+    "noCandidates": "No elements found to test",
+    "errorCreatingSession": "Error creating test session",
+    "errorSavingAnswer": "Error saving answer",
+    "stats": {
+      "available": "Available",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "issuesFound": "Issues Found"
+    },
+    "status": {
+      "not_started": "Not Started",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "skipped": "Skipped"
+    },
+    "candidates": "elements",
+    "progress": "Progress",
+    "issues": "issues",
+    "warnings": "warnings",
+    "passed": "Passed",
+    "startTest": "Start Test",
+    "continueTest": "Continue Test",
+    "viewResults": "View Results",
+    "runAgain": "Run Again",
+    "beforeYouStart": "Before you start",
+    "instructions": {
+      "1": "Open the page in a new tab to view the element",
+      "2": "Answer the questions based on your analysis of the element",
+      "3": "Use 'Not sure' when the answer is not clear"
+    },
+    "estimatedTime": "Estimated time: {minutes} minutes",
+    "elementToEvaluate": "Element to evaluate",
+    "selector": "Selector",
+    "yes": "Yes",
+    "no": "No",
+    "unsure": "Not sure",
+    "optionalComment": "Comment (optional)",
+    "commentPlaceholder": "Add notes about this element...",
+    "skipElement": "Skip element",
+    "nextQuestion": "Next",
+    "testCompleted": "Test completed!",
+    "testCompletedDescription": "You have evaluated all elements. See the summary below.",
+    "images-alt-quality": {
+      "name": "Alt Text Quality",
+      "description": "Verifies if the alternative text of images adequately describes the visual content"
+    },
+    "links-purpose": {
+      "name": "Link Purpose",
+      "description": "Verifies if the link text adequately describes the destination"
+    },
+    "sign-language-plugin": {
+      "name": "Sign Language Plugin",
+      "description": "Verifies if the sign language translation plugin is working correctly"
+    },
+    "images": {
+      "questions": {
+        "describesContent": "Does the alt text adequately describe the image content?",
+        "describesContentHelp": "Check if the alt text conveys the same information as the image. For example, if it's a product photo, the alt should describe the product.",
+        "isDecorative": "Is this image purely decorative (does not convey information)?",
+        "isDecorativeHelp": "Decorative images are those used only for visual enhancement, like borders, separators, or meaningless icons."
+      }
+    },
+    "links": {
+      "questions": {
+        "contextClear": "Is the link purpose clear from the surrounding context?",
+        "contextClearHelp": "Check if by reading the paragraph or sentence where the link is, the user can understand where it leads.",
+        "destinationPredictable": "Can you predict where the link leads?",
+        "destinationPredictableHelp": "When reading the link text and context, is it possible to know what type of content will be displayed when clicking.",
+        "needsAriaLabel": "Does the link need an aria-label to be understandable?",
+        "needsAriaLabelHelp": "If the visible text is not sufficient, an aria-label can provide additional context for screen readers."
+      }
+    },
+    "signLanguage": {
+      "questions": {
+        "widgetVisible": "Is the sign language plugin widget visible on the page?",
+        "widgetVisibleHelp": "Look for a floating button or icon, usually in the bottom corner of the screen, that activates the translator.",
+        "widgetActivates": "Does the widget open when clicked?",
+        "widgetActivatesHelp": "Click on the plugin button and check if a window or panel opens.",
+        "avatarAppears": "Does the avatar/interpreter appear when the plugin is activated?",
+        "avatarAppearsHelp": "After activating the plugin, a virtual interpreter should appear that translates the content into sign language.",
+        "contentTranslated": "Is the page content being translated?",
+        "contentTranslatedHelp": "Select text on the page and check if the avatar makes the corresponding signs.",
+        "keyboardAccessible": "Can the widget be activated using only the keyboard?",
+        "keyboardAccessibleHelp": "Try navigating to the widget using Tab and activating it with Enter or Space."
+      }
+    },
+    "categories": {
+      "images": "Images",
+      "links": "Links",
+      "forms": "Forms",
+      "keyboard": "Keyboard",
+      "signLanguage": "Sign Language",
+      "contrast": "Contrast",
+      "structure": "Structure",
+      "multimedia": "Multimedia"
+    }
   }
 }

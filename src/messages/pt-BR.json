@@ -1041,5 +1041,108 @@
       "positive": "Indicador positivo",
       "negative": "Indicador de incerteza"
     }
+  },
+  "IGT": {
+    "title": "Testes Guiados",
+    "description": "Testes semi-automatizados para validar casos que automacao nao consegue resolver",
+    "backToAudit": "Voltar para auditoria",
+    "backToList": "Voltar para lista",
+    "noIGTsAvailable": "Nenhum teste disponivel para esta auditoria",
+    "noCandidates": "Nenhum elemento encontrado para testar",
+    "errorCreatingSession": "Erro ao criar sessao de teste",
+    "errorSavingAnswer": "Erro ao salvar resposta",
+    "stats": {
+      "available": "Disponiveis",
+      "completed": "Concluidos",
+      "inProgress": "Em andamento",
+      "issuesFound": "Problemas encontrados"
+    },
+    "status": {
+      "not_started": "Nao iniciado",
+      "in_progress": "Em andamento",
+      "completed": "Concluido",
+      "skipped": "Pulado"
+    },
+    "candidates": "elementos",
+    "progress": "Progresso",
+    "issues": "problemas",
+    "warnings": "avisos",
+    "passed": "Aprovados",
+    "startTest": "Iniciar teste",
+    "continueTest": "Continuar teste",
+    "viewResults": "Ver resultados",
+    "runAgain": "Executar novamente",
+    "beforeYouStart": "Antes de comecar",
+    "instructions": {
+      "1": "Abra a pagina em uma nova aba para visualizar o elemento",
+      "2": "Responda as perguntas com base na sua analise do elemento",
+      "3": "Use 'Nao tenho certeza' quando a resposta nao for clara"
+    },
+    "estimatedTime": "Tempo estimado: {minutes} minutos",
+    "elementToEvaluate": "Elemento a avaliar",
+    "selector": "Seletor",
+    "yes": "Sim",
+    "no": "Nao",
+    "unsure": "Nao tenho certeza",
+    "optionalComment": "Comentario (opcional)",
+    "commentPlaceholder": "Adicione observacoes sobre este elemento...",
+    "skipElement": "Pular elemento",
+    "nextQuestion": "Proxima",
+    "testCompleted": "Teste concluido!",
+    "testCompletedDescription": "Voce avaliou todos os elementos. Veja o resumo abaixo.",
+    "images-alt-quality": {
+      "name": "Qualidade do Alt Text",
+      "description": "Verifica se o texto alternativo das imagens descreve adequadamente o conteudo visual"
+    },
+    "links-purpose": {
+      "name": "Proposito dos Links",
+      "description": "Verifica se o texto dos links descreve adequadamente o destino"
+    },
+    "sign-language-plugin": {
+      "name": "Plugin de Lingua de Sinais",
+      "description": "Verifica se o plugin de traducao para lingua de sinais esta funcionando corretamente"
+    },
+    "images": {
+      "questions": {
+        "describesContent": "O texto alternativo descreve adequadamente o conteudo da imagem?",
+        "describesContentHelp": "Verifique se o alt text transmite a mesma informacao que a imagem. Por exemplo, se e uma foto de um produto, o alt deve descrever o produto.",
+        "isDecorative": "Esta imagem e puramente decorativa (nao transmite informacao)?",
+        "isDecorativeHelp": "Imagens decorativas sao aquelas usadas apenas para enfeite, como bordas, separadores ou icones sem significado."
+      }
+    },
+    "links": {
+      "questions": {
+        "contextClear": "O proposito do link e claro pelo contexto ao redor?",
+        "contextClearHelp": "Verifique se lendo o paragrafo ou frase onde o link esta, o usuario consegue entender para onde ele leva.",
+        "destinationPredictable": "Voce consegue prever para onde o link leva?",
+        "destinationPredictableHelp": "Ao ler o texto do link e o contexto, e possivel saber que tipo de conteudo sera exibido ao clicar.",
+        "needsAriaLabel": "O link precisa de um aria-label para ser compreensivel?",
+        "needsAriaLabelHelp": "Se o texto visivel nao for suficiente, um aria-label pode fornecer contexto adicional para leitores de tela."
+      }
+    },
+    "signLanguage": {
+      "questions": {
+        "widgetVisible": "O widget do plugin de lingua de sinais esta visivel na pagina?",
+        "widgetVisibleHelp": "Procure por um botao ou icone flutuante, geralmente no canto inferior da tela, que ativa o tradutor.",
+        "widgetActivates": "O widget abre ao ser clicado?",
+        "widgetActivatesHelp": "Clique no botao do plugin e verifique se uma janela ou painel se abre.",
+        "avatarAppears": "O avatar/interprete aparece quando o plugin e ativado?",
+        "avatarAppearsHelp": "Apos ativar o plugin, deve aparecer um interprete virtual que traduz o conteudo para lingua de sinais.",
+        "contentTranslated": "O conteudo da pagina esta sendo traduzido?",
+        "contentTranslatedHelp": "Selecione um texto na pagina e verifique se o avatar faz os sinais correspondentes.",
+        "keyboardAccessible": "O widget pode ser ativado usando apenas o teclado?",
+        "keyboardAccessibleHelp": "Tente navegar ate o widget usando Tab e ativa-lo com Enter ou Espaco."
+      }
+    },
+    "categories": {
+      "images": "Imagens",
+      "links": "Links",
+      "forms": "Formularios",
+      "keyboard": "Teclado",
+      "signLanguage": "Lingua de Sinais",
+      "contrast": "Contraste",
+      "structure": "Estrutura",
+      "multimedia": "Multimidia"
+    }
   }
 }

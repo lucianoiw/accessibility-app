@@ -1030,5 +1030,108 @@
       "positive": "Indicador positivo",
       "negative": "Indicador de incertidumbre"
     }
+  },
+  "IGT": {
+    "title": "Pruebas Guiadas",
+    "description": "Pruebas semiautomatizadas para validar casos que la automatizacion no puede resolver",
+    "backToAudit": "Volver a la auditoria",
+    "backToList": "Volver a la lista",
+    "noIGTsAvailable": "No hay pruebas disponibles para esta auditoria",
+    "noCandidates": "No se encontraron elementos para probar",
+    "errorCreatingSession": "Error al crear sesion de prueba",
+    "errorSavingAnswer": "Error al guardar respuesta",
+    "stats": {
+      "available": "Disponibles",
+      "completed": "Completados",
+      "inProgress": "En progreso",
+      "issuesFound": "Problemas encontrados"
+    },
+    "status": {
+      "not_started": "No iniciado",
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "skipped": "Omitido"
+    },
+    "candidates": "elementos",
+    "progress": "Progreso",
+    "issues": "problemas",
+    "warnings": "advertencias",
+    "passed": "Aprobados",
+    "startTest": "Iniciar prueba",
+    "continueTest": "Continuar prueba",
+    "viewResults": "Ver resultados",
+    "runAgain": "Ejecutar de nuevo",
+    "beforeYouStart": "Antes de comenzar",
+    "instructions": {
+      "1": "Abra la pagina en una nueva pestana para ver el elemento",
+      "2": "Responda las preguntas basandose en su analisis del elemento",
+      "3": "Use 'No estoy seguro' cuando la respuesta no sea clara"
+    },
+    "estimatedTime": "Tiempo estimado: {minutes} minutos",
+    "elementToEvaluate": "Elemento a evaluar",
+    "selector": "Selector",
+    "yes": "Si",
+    "no": "No",
+    "unsure": "No estoy seguro",
+    "optionalComment": "Comentario (opcional)",
+    "commentPlaceholder": "Agregar notas sobre este elemento...",
+    "skipElement": "Omitir elemento",
+    "nextQuestion": "Siguiente",
+    "testCompleted": "Prueba completada!",
+    "testCompletedDescription": "Ha evaluado todos los elementos. Vea el resumen a continuacion.",
+    "images-alt-quality": {
+      "name": "Calidad del Texto Alternativo",
+      "description": "Verifica si el texto alternativo de las imagenes describe adecuadamente el contenido visual"
+    },
+    "links-purpose": {
+      "name": "Proposito de los Enlaces",
+      "description": "Verifica si el texto del enlace describe adecuadamente el destino"
+    },
+    "sign-language-plugin": {
+      "name": "Plugin de Lengua de Senas",
+      "description": "Verifica si el plugin de traduccion a lengua de senas esta funcionando correctamente"
+    },
+    "images": {
+      "questions": {
+        "describesContent": "El texto alternativo describe adecuadamente el contenido de la imagen?",
+        "describesContentHelp": "Verifique si el texto alt transmite la misma informacion que la imagen. Por ejemplo, si es una foto de un producto, el alt debe describir el producto.",
+        "isDecorative": "Esta imagen es puramente decorativa (no transmite informacion)?",
+        "isDecorativeHelp": "Las imagenes decorativas son aquellas usadas solo para embellecimiento, como bordes, separadores o iconos sin significado."
+      }
+    },
+    "links": {
+      "questions": {
+        "contextClear": "El proposito del enlace es claro por el contexto circundante?",
+        "contextClearHelp": "Verifique si al leer el parrafo o frase donde esta el enlace, el usuario puede entender a donde lleva.",
+        "destinationPredictable": "Puede predecir a donde lleva el enlace?",
+        "destinationPredictableHelp": "Al leer el texto del enlace y el contexto, es posible saber que tipo de contenido se mostrara al hacer clic.",
+        "needsAriaLabel": "El enlace necesita un aria-label para ser comprensible?",
+        "needsAriaLabelHelp": "Si el texto visible no es suficiente, un aria-label puede proporcionar contexto adicional para lectores de pantalla."
+      }
+    },
+    "signLanguage": {
+      "questions": {
+        "widgetVisible": "El widget del plugin de lengua de senas esta visible en la pagina?",
+        "widgetVisibleHelp": "Busque un boton o icono flotante, generalmente en la esquina inferior de la pantalla, que activa el traductor.",
+        "widgetActivates": "El widget se abre al hacer clic?",
+        "widgetActivatesHelp": "Haga clic en el boton del plugin y verifique si se abre una ventana o panel.",
+        "avatarAppears": "El avatar/interprete aparece cuando se activa el plugin?",
+        "avatarAppearsHelp": "Despues de activar el plugin, debe aparecer un interprete virtual que traduce el contenido a lengua de senas.",
+        "contentTranslated": "El contenido de la pagina esta siendo traducido?",
+        "contentTranslatedHelp": "Seleccione texto en la pagina y verifique si el avatar hace las senas correspondientes.",
+        "keyboardAccessible": "Se puede activar el widget usando solo el teclado?",
+        "keyboardAccessibleHelp": "Intente navegar hasta el widget usando Tab y activarlo con Enter o Espacio."
+      }
+    },
+    "categories": {
+      "images": "Imagenes",
+      "links": "Enlaces",
+      "forms": "Formularios",
+      "keyboard": "Teclado",
+      "signLanguage": "Lengua de Senas",
+      "contrast": "Contraste",
+      "structure": "Estructura",
+      "multimedia": "Multimedia"
+    }
   }
 }
