@@ -550,6 +550,43 @@ Sistema de agendamento automatico de auditorias usando Trigger.dev scheduled tas
 - [x] Error Boundary global para captura de erros React
 - [x] Logging de erros no console (componentDidCatch)
 
+### Niveis de Confianca (Fase 1)
+
+Sistema para classificar violacoes por nivel de certeza, reduzindo falsos positivos e priorizando revisao humana.
+
+**Niveis:**
+- `certain` - 100% certeza (ex: img sem alt)
+- `likely` - ~90% probabilidade, pode ter excecoes (ex: alt generico)
+- `needs_review` - Requer verificacao humana (ex: "clique aqui" em contexto)
+
+**Arquivos principais:**
+- `src/lib/audit/confidence.ts` - Configuracao de confianca por regra (35+ regras)
+- `src/lib/audit/false-positive-filters.ts` - 10 filtros de falsos positivos
+- `src/components/audit/confidence-badge.tsx` - Badge visual com tooltip
+- `supabase/migrations/00018_add_confidence_levels.sql` - Colunas no banco
+
+**Funcionalidades:**
+- [x] Calculo de confianca baseado em contexto (HTML, selector, parentHtml)
+- [x] Sinais positivos/negativos que influenciam a decisao
+- [x] Filtro de falsos positivos antes de salvar
+- [x] Regras experimentais marcadas com flag `is_experimental`
+- [x] Badge visual com cores por nivel (verde/amarelo/laranja)
+- [x] Tooltip mostrando sinais detectados
+- [x] Filtro por nivel de confianca na UI
+- [x] Toggle para mostrar/ocultar regras experimentais
+- [x] Traducoes completas (pt-BR, en, es)
+
+**Regras experimentais (COGA e algumas eMAG):**
+- `legibilidade-texto-complexo`
+- `siglas-sem-expansao`
+- `linguagem-inconsistente`
+- `timeout-sem-aviso`
+- `brasil-libras-plugin`
+- `emag-breadcrumb`
+- `emag-pdf-acessivel`
+- `emag-atalhos-teclado`
+- `barra-acessibilidade-gov-br`
+
 ### Conformidade eMAG 3.1
 
 - [x] Checklist eMAG 3.1 completo (46 recomendacoes: 45 oficiais + 6.8 CAPTCHA customizada)
@@ -958,6 +995,14 @@ Modulos que requerem Playwright real:
 - [ ] `custom-rules.ts` - Testes E2E com Playwright
 - [ ] `coga-rules.ts` - Testes E2E com Playwright
 - [ ] `auditor.ts` e `crawler.ts` - Testes de integracao
+
+---
+
+## Bugs Conhecidos / Investigar
+
+| Bug | Descricao | Status |
+|-----|-----------|--------|
+| **CSS/XPath nao alterados** | Os campos `fullPath` e `xpath` nas violacoes parecem nao estar sendo alterados/salvos corretamente. Investigar se o problema esta na extracao (auditor.ts), agregacao ou salvamento no banco. | Pendente |
 
 ---
 

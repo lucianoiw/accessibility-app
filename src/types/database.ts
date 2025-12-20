@@ -42,6 +42,49 @@ export type InsightType = 'positive' | 'negative' | 'neutral' | 'warning'
 export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly'
 
 // ============================================
+// Confidence Level Types (Phase 1)
+// ============================================
+
+/**
+ * Confidence level for violation detection
+ * - certain: 100% certainty it's a real violation (e.g., img without alt)
+ * - likely: High probability (~90%) but may have exceptions (e.g., generic alt)
+ * - needs_review: Requires human verification (e.g., "click here" link in context)
+ */
+export type ConfidenceLevel = 'certain' | 'likely' | 'needs_review'
+
+/**
+ * Reason why a violation needs human review
+ */
+export type ReviewReason =
+  | 'context_dependent'      // Depends on page context (e.g., generic link)
+  | 'possibly_decorative'    // May be a decorative element
+  | 'possibly_intentional'   // May be intentional (e.g., small text in caption)
+  | 'detection_limited'      // Automated detection has limitations
+  | 'external_resource'      // Depends on external resource (e.g., sign language plugin loaded?)
+  | 'user_preference'        // May be a user/design preference
+
+/**
+ * Individual signal that influences confidence
+ */
+export interface ConfidenceSignal {
+  type: 'positive' | 'negative'  // Increases or decreases confidence
+  signal: string                  // Signal name (e.g., 'has_aria_hidden')
+  weight: number                  // Signal weight (0.0 to 1.0)
+  description: string             // Human-readable description
+}
+
+/**
+ * Confidence metadata for a violation
+ */
+export interface ConfidenceMetadata {
+  level: ConfidenceLevel
+  score: number              // 0.0 to 1.0 (probability of being real)
+  reason?: ReviewReason      // Why it needs review (if needs_review)
+  signals: ConfidenceSignal[] // Signals that influenced the decision
+}
+
+// ============================================
 // Discovery Config Types
 // ============================================
 
@@ -313,6 +356,12 @@ export interface AggregatedViolation {
   verification_result: VerificationResult | null
   resolution_notes: string | null
   resolved_by: string | null
+  // Confidence level fields (Phase 1)
+  confidence_level: ConfidenceLevel
+  confidence_score: number           // 0.0 to 1.0
+  confidence_reason: ReviewReason | null
+  confidence_signals: ConfidenceSignal[] | null
+  is_experimental: boolean           // Flag for experimental rules
   created_at: string
   updated_at: string
 }
@@ -727,6 +776,8 @@ export interface Database {
       violation_change_type: ViolationChangeType
       trend_direction: TrendDirection
       insight_type: InsightType
+      confidence_level: ConfidenceLevel
+      review_reason: ReviewReason
     }
   }
 }

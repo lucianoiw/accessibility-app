@@ -878,7 +878,14 @@
     "in": "em",
     "page": "pagina",
     "pasteXPathHint": "Cole no DevTools: F12 → Elements → Ctrl+F → selecione XPath",
-    "pasteCssHint": "Cole no DevTools: F12 → Elements → Ctrl+F"
+    "pasteCssHint": "Cole no DevTools: F12 → Elements → Ctrl+F",
+    "confidenceLevel": "Nivel de Confianca",
+    "allConfidenceLevels": "Todos os niveis",
+    "confidenceCertain": "Certeza",
+    "confidenceLikely": "Provavel",
+    "confidenceNeedsReview": "Requer Verificacao",
+    "showExperimental": "Mostrar experimentais",
+    "hideExperimental": "Ocultar experimentais"
   },
   "AuditComparison": {
     "title": "Comparacao de Auditorias",
@@ -1011,5 +1018,28 @@
     "thursday": "Quinta-feira",
     "friday": "Sexta-feira",
     "saturday": "Sabado"
+  },
+  "Confidence": {
+    "certain": "Certeza",
+    "likely": "Provavel",
+    "needsReview": "Requer Verificacao",
+    "experimental": "Experimental",
+    "experimentalTooltip": "Esta regra e experimental e pode ter mais falsos positivos",
+    "signalsDetected": "Sinais detectados",
+    "filterByConfidence": "Filtrar por confianca",
+    "showExperimental": "Mostrar regras experimentais",
+    "allLevels": "Todos os niveis",
+    "reasons": {
+      "context_dependent": "Depende do contexto da pagina",
+      "possibly_decorative": "Pode ser elemento decorativo",
+      "possibly_intentional": "Pode ser intencional",
+      "detection_limited": "Deteccao automatizada tem limitacoes",
+      "external_resource": "Depende de recurso externo",
+      "user_preference": "Pode ser preferencia do usuario"
+    },
+    "signals": {
+      "positive": "Indicador positivo",
+      "negative": "Indicador de incerteza"
+    }
   }
 }

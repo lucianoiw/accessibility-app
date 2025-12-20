@@ -842,7 +842,14 @@
     "in": "en",
     "page": "pagina",
     "pasteXPathHint": "Pegar en DevTools: F12 → Elements → Ctrl+F → seleccionar XPath",
-    "pasteCssHint": "Pegar en DevTools: F12 → Elements → Ctrl+F"
+    "pasteCssHint": "Pegar en DevTools: F12 → Elements → Ctrl+F",
+    "confidenceLevel": "Nivel de confianza",
+    "allConfidenceLevels": "Todos los niveles",
+    "confidenceCertain": "Cierto",
+    "confidenceLikely": "Probable",
+    "confidenceNeedsReview": "Requiere revision",
+    "showExperimental": "Mostrar experimentales",
+    "hideExperimental": "Ocultar experimentales"
   },
   "WcagPartial": {
     "inputSemAutocomplete": {
@@ -1000,5 +1007,28 @@
     "thursday": "Jueves",
     "friday": "Viernes",
     "saturday": "Sabado"
+  },
+  "Confidence": {
+    "certain": "Certeza",
+    "likely": "Probable",
+    "needsReview": "Requiere Verificacion",
+    "experimental": "Experimental",
+    "experimentalTooltip": "Esta regla es experimental y puede tener mas falsos positivos",
+    "signalsDetected": "Senales detectadas",
+    "filterByConfidence": "Filtrar por confianza",
+    "showExperimental": "Mostrar reglas experimentales",
+    "allLevels": "Todos los niveles",
+    "reasons": {
+      "context_dependent": "Depende del contexto de la pagina",
+      "possibly_decorative": "Puede ser elemento decorativo",
+      "possibly_intentional": "Puede ser intencional",
+      "detection_limited": "La deteccion automatizada tiene limitaciones",
+      "external_resource": "Depende de recurso externo",
+      "user_preference": "Puede ser preferencia del usuario"
+    },
+    "signals": {
+      "positive": "Indicador positivo",
+      "negative": "Indicador de incertidumbre"
+    }
   }
 }

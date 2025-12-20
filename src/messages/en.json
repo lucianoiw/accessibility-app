@@ -842,7 +842,14 @@
     "in": "in",
     "page": "page",
     "pasteXPathHint": "Paste in DevTools: F12 → Elements → Ctrl+F → select XPath",
-    "pasteCssHint": "Paste in DevTools: F12 → Elements → Ctrl+F"
+    "pasteCssHint": "Paste in DevTools: F12 → Elements → Ctrl+F",
+    "confidenceLevel": "Confidence Level",
+    "allConfidenceLevels": "All levels",
+    "confidenceCertain": "Certain",
+    "confidenceLikely": "Likely",
+    "confidenceNeedsReview": "Needs Review",
+    "showExperimental": "Show experimental",
+    "hideExperimental": "Hide experimental"
   },
   "WcagPartial": {
     "inputSemAutocomplete": {
@@ -1000,5 +1007,28 @@
     "thursday": "Thursday",
     "friday": "Friday",
     "saturday": "Saturday"
+  },
+  "Confidence": {
+    "certain": "Certain",
+    "likely": "Likely",
+    "needsReview": "Needs Review",
+    "experimental": "Experimental",
+    "experimentalTooltip": "This rule is experimental and may have more false positives",
+    "signalsDetected": "Signals detected",
+    "filterByConfidence": "Filter by confidence",
+    "showExperimental": "Show experimental rules",
+    "allLevels": "All levels",
+    "reasons": {
+      "context_dependent": "Depends on page context",
+      "possibly_decorative": "May be decorative element",
+      "possibly_intentional": "May be intentional",
+      "detection_limited": "Automated detection has limitations",
+      "external_resource": "Depends on external resource",
+      "user_preference": "May be user preference"
+    },
+    "signals": {
+      "positive": "Positive indicator",
+      "negative": "Uncertainty indicator"
+    }
   }
 }

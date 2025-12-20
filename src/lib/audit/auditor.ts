@@ -1,10 +1,12 @@
 import { chromium, type Browser, type Page } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
-import type { ImpactLevel, AuthConfig, BrokenPageErrorType } from '@/types'
+import type { ImpactLevel, AuthConfig, BrokenPageErrorType, ConfidenceLevel, ReviewReason, ConfidenceSignal } from '@/types'
 import { getCustomViolations } from './custom-rules'
 import { runWcagPartialRules } from './wcag-partial-rules'
 import { ABNT_MAP } from './abnt-map'
 import { extractLinksFromPage, type SubdomainConfig } from './crawler'
+import { calculateConfidence, isExperimentalRule, type ElementContext } from './confidence'
+import { filterFalsePositives } from './false-positive-filters'
 
 // Termos que indicam que a página ainda está carregando
 const LOADING_INDICATORS = [
@@ -226,6 +228,12 @@ export interface ViolationResult {
   parentHtml: string | null
   failureSummary: string | null
   fingerprint: string
+  // Confidence fields (Phase 1)
+  confidenceLevel?: ConfidenceLevel
+  confidenceScore?: number
+  confidenceReason?: ReviewReason | null
+  confidenceSignals?: ConfidenceSignal[]
+  isExperimental?: boolean
 }
 
 export interface AuditorOptions {
@@ -618,12 +626,40 @@ export async function auditPage(
       }
     }
 
+    // PHASE 1: Filter false positives
+    const { violations: filteredViolations, filtered } = filterFalsePositives(violations)
+
+    if (filtered.length > 0) {
+      console.log(`[Auditor] Filtered ${filtered.length} likely false positives for ${url}`)
+    }
+
+    // PHASE 1: Enrich with confidence data
+    const enrichedViolations = filteredViolations.map(v => {
+      const context: ElementContext = {
+        html: v.html,
+        selector: v.selector,
+        parentHtml: v.parentHtml,
+        pageUrl: url,
+      }
+
+      const confidence = calculateConfidence(v.ruleId, v.isCustomRule, context)
+
+      return {
+        ...v,
+        confidenceLevel: confidence.level,
+        confidenceScore: confidence.score,
+        confidenceReason: confidence.reason || null,
+        confidenceSignals: confidence.signals,
+        isExperimental: isExperimentalRule(v.ruleId, v.isCustomRule),
+      }
+    })
+
     await browser.close()
 
-    console.log(`[Auditor] Total violations for ${url}: ${violations.length}`)
+    console.log(`[Auditor] Total violations for ${url}: ${enrichedViolations.length} (${violations.length - enrichedViolations.length} filtered)`)
     return {
       url,
-      violations,
+      violations: enrichedViolations,
       loadTime,
       screenshot,
       discoveredLinks,

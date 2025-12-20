@@ -720,6 +720,12 @@ export const runAuditTask = task({
         sample_page_url: data.pageUrls[0],
         priority,
         unique_elements: data.uniqueElements,
+        // Confidence fields (Phase 1)
+        confidence_level: data.violation.confidenceLevel || 'certain',
+        confidence_score: data.violation.confidenceScore || 1.0,
+        confidence_reason: data.violation.confidenceReason || null,
+        confidence_signals: data.violation.confidenceSignals || [],
+        is_experimental: data.violation.isExperimental || false,
       })
     }
 

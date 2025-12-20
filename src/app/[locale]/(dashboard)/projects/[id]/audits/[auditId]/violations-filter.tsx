@@ -15,11 +15,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Autocomplete } from '@/components/ui/autocomplete'
-import type { AggregatedViolation, ImpactLevel, ViolationStatus, UniqueElement } from '@/types'
+import type { AggregatedViolation, ImpactLevel, ViolationStatus, UniqueElement, ConfidenceLevel } from '@/types'
 import { getRuleLabel } from '@/lib/audit/rule-labels'
 import { VerifyButton } from './verify-button'
 import { SuggestButton } from './suggest-button'
-import { Copy, Check, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { ConfidenceBadge } from '@/components/audit/confidence-badge'
+import { Copy, Check, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, HelpCircle, FlaskConical } from 'lucide-react'
 
 interface Props {
   violations: AggregatedViolation[]
@@ -59,6 +60,8 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
   const [sortBy, setSortBy] = useState<SortOption>('priority')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [showCogaOnly, setShowCogaOnly] = useState(false)
+  const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceLevel | 'all'>('all')
+  const [showExperimental, setShowExperimental] = useState(true)
 
   // Get unique values for filters
   const uniqueRules = useMemo(() => {
@@ -182,6 +185,16 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
       result = result.filter((v) => COGA_RULES.includes(v.rule_id))
     }
 
+    // Confidence filter
+    if (confidenceFilter !== 'all') {
+      result = result.filter((v) => v.confidence_level === confidenceFilter)
+    }
+
+    // Experimental filter
+    if (!showExperimental) {
+      result = result.filter((v) => !v.is_experimental)
+    }
+
     // Sort
     result.sort((a, b) => {
       switch (sortBy) {
@@ -205,7 +218,7 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
     })
 
     return result
-  }, [violations, searchTerm, selectedUrl, selectedImpacts, selectedLevels, selectedRule, showCustomOnly, showAxeOnly, selectedAbnt, selectedEmag, selectedStatuses, showCogaOnly, sortBy])
+  }, [violations, searchTerm, selectedUrl, selectedImpacts, selectedLevels, selectedRule, showCustomOnly, showAxeOnly, selectedAbnt, selectedEmag, selectedStatuses, showCogaOnly, confidenceFilter, showExperimental, sortBy])
 
   // Toggle impact filter
   const toggleImpact = (impact: ImpactLevel) => {
@@ -241,6 +254,8 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
     setSelectedAbnt('')
     setSelectedEmag('')
     setSelectedStatuses([])
+    setConfidenceFilter('all')
+    setShowExperimental(true)
     setSortBy('priority')
   }
 
@@ -255,7 +270,9 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
     showCogaOnly ||
     selectedAbnt ||
     selectedEmag ||
-    selectedStatuses.length > 0
+    selectedStatuses.length > 0 ||
+    confidenceFilter !== 'all' ||
+    !showExperimental
 
   // Impact labels for UI
   const impactLabels = useMemo(() => ({
@@ -312,9 +329,20 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
     if (selectedRule) {
       chips.push({ label: getRuleLabel(selectedRule), onRemove: () => setSelectedRule('') })
     }
+    if (confidenceFilter !== 'all') {
+      const confidenceLabels = {
+        certain: t('confidenceCertain'),
+        likely: t('confidenceLikely'),
+        needs_review: t('confidenceNeedsReview'),
+      }
+      chips.push({ label: confidenceLabels[confidenceFilter], onRemove: () => setConfidenceFilter('all') })
+    }
+    if (!showExperimental) {
+      chips.push({ label: t('hideExperimental'), onRemove: () => setShowExperimental(true) })
+    }
 
     return chips
-  }, [searchTerm, selectedUrl, selectedImpacts, selectedStatuses, selectedLevels, showCustomOnly, showAxeOnly, showCogaOnly, selectedAbnt, selectedEmag, selectedRule, impactLabels, statusLabels])
+  }, [searchTerm, selectedUrl, selectedImpacts, selectedStatuses, selectedLevels, showCustomOnly, showAxeOnly, showCogaOnly, selectedAbnt, selectedEmag, selectedRule, confidenceFilter, showExperimental, impactLabels, statusLabels, t])
 
   return (
     <div className="space-y-6">
@@ -583,6 +611,50 @@ export function ViolationsFilter({ violations, includeAbnt, includeEmag }: Props
                 </div>
               </div>
             </div>
+
+            {/* Confidence Filter */}
+            <div className="space-y-2">
+              <Label className="text-sm">{t('confidenceLevel')}</Label>
+              <div className="flex flex-wrap gap-4">
+                <Select value={confidenceFilter} onValueChange={(v) => setConfidenceFilter(v as ConfidenceLevel | 'all')}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder={t('allConfidenceLevels')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('allConfidenceLevels')}</SelectItem>
+                    <SelectItem value="certain">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        {t('confidenceCertain')}
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="likely">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-yellow-500" />
+                        {t('confidenceLikely')}
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="needs_review">
+                      <div className="flex items-center gap-2">
+                        <HelpCircle className="h-4 w-4 text-orange-500" />
+                        {t('confidenceNeedsReview')}
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="show-experimental"
+                    checked={showExperimental}
+                    onCheckedChange={(checked) => setShowExperimental(!!checked)}
+                  />
+                  <Label htmlFor="show-experimental" className="text-sm font-normal cursor-pointer flex items-center gap-1">
+                    <FlaskConical className="h-4 w-4" />
+                    {t('showExperimental')}
+                  </Label>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -724,6 +796,14 @@ function ViolationCard({ violation, selectorMode, t, impactLabels }: {
               <span className="text-xs bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded">
                 COGA
               </span>
+            )}
+            {violation.confidence_level && (
+              <ConfidenceBadge
+                level={violation.confidence_level}
+                score={violation.confidence_score || 1}
+                signals={violation.confidence_signals || []}
+                isExperimental={violation.is_experimental}
+              />
             )}
           </div>
 

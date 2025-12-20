@@ -3,11 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste de Regras COGA e WCAG Parciais</title>
-
-  <!-- VIOLAÇÃO: meta refresh com timeout (timeout-sem-aviso) -->
-  <!-- Descomente para testar: -->
-  <!-- <meta http-equiv="refresh" content="300;url=/timeout"> -->
+  <title>Teste de Regras - Confidence Levels</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -20,6 +16,7 @@
     }
     h1 { color: #1a1a1a; border-bottom: 2px solid #6b46c1; padding-bottom: 0.5rem; }
     h2 { color: #6b46c1; margin-top: 2rem; }
+    h3 { color: #4a5568; margin-top: 1.5rem; font-size: 1.1rem; }
     section {
       background: #f9fafb;
       border: 1px solid #e5e7eb;
@@ -44,746 +41,432 @@
       font-size: 0.75rem;
       font-family: monospace;
     }
+    .confidence-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    .confidence-certain { background: #dcfce7; color: #16a34a; }
+    .confidence-likely { background: #fef3c7; color: #d97706; }
+    .confidence-needs-review { background: #ffedd5; color: #ea580c; }
+    .experimental { background: #e0e7ff; color: #4f46e5; }
     code {
       background: #e5e7eb;
       padding: 0.125rem 0.375rem;
       border-radius: 4px;
       font-size: 0.875rem;
     }
-    .correct {
-      background: #f0fdf4;
-      border-color: #22c55e;
-    }
-    .correct .violation-label {
-      background: #dcfce7;
-      color: #16a34a;
+
+    /* VIOLATION: Texto justificado (texto-justificado) */
+    .justified-text {
+      text-align: justify;
+      max-width: 600px;
     }
 
-    /* VIOLAÇÃO: Animação CSS sem controle de pausa */
+    /* VIOLATION: Texto em maiusculas via CSS (texto-maiusculo-css) */
+    .uppercase-text {
+      text-transform: uppercase;
+    }
+
+    /* VIOLATION: Fonte muito pequena (fonte-muito-pequena) */
+    .tiny-text {
+      font-size: 9px;
+    }
+
+    /* Link sem sublinhado para teste */
+    .text-block a.no-underline {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    /* Animacao sem controle */
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
-    }
-    @keyframes slide {
-      0% { transform: translateX(0); }
-      50% { transform: translateX(20px); }
-      100% { transform: translateX(0); }
     }
     .animated-box {
       width: 100px;
       height: 100px;
       background: linear-gradient(135deg, #6b46c1, #9333ea);
       border-radius: 8px;
-      animation: pulse 2s infinite, slide 3s infinite;
+      animation: pulse 2s infinite;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       font-weight: bold;
     }
-    .spinning {
-      animation: spin 2s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    /* Estilos para teste de links sem sublinhado */
-    .text-block {
-      line-height: 1.8;
-    }
-    .text-block a.no-underline {
-      color: #2563eb;
-      text-decoration: none;
-    }
-    .text-block a.with-underline {
-      color: #2563eb;
-      text-decoration: underline;
-    }
-
-    /* Seção WCAG Parcial */
-    .wcag-partial {
-      background: #eff6ff;
-      border-color: #3b82f6;
-    }
-    .wcag-partial h2 {
-      color: #1d4ed8;
-    }
   </style>
 </head>
 <body>
 
-<h1>Teste de Regras COGA e WCAG Parciais</h1>
-<p>Esta página contém exemplos de violações para testar as 6 regras COGA e as 5 regras WCAG de detecção parcial.</p>
+<h1>Teste de Confidence Levels</h1>
+<p>Esta pagina contem exemplos de violacoes organizadas por nivel de confianca esperado.</p>
 
 <!-- ============================================ -->
-<!-- 1. LEGIBILIDADE-TEXTO-COMPLEXO -->
+<!-- CERTAIN - ALTA CERTEZA (100%) -->
 <!-- ============================================ -->
-<h2>1. Legibilidade de Texto</h2>
-<p><span class="rule-id">legibilidade-texto-complexo</span> - Flesch-Kincaid PT-BR &lt; 50</p>
+<h2><span class="confidence-badge confidence-certain">CERTAIN</span> Alta Certeza (100%)</h2>
+<p>Violacoes que sao certamente problemas reais de acessibilidade.</p>
 
+<!-- image-alt -->
 <section>
-  <p><span class="violation-label">Violação</span> Texto jurídico complexo:</p>
+  <p><span class="rule-id">image-alt</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
+  <p><span class="violation-label">Violacao</span> Imagens sem atributo alt:</p>
+  <img src="https://via.placeholder.com/150x100?text=Sem+Alt" width="150" height="100">
+  <img src="https://via.placeholder.com/100x100?text=Foto" width="100" height="100">
+</section>
+
+<!-- button-name -->
+<section>
+  <p><span class="rule-id">button-name</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
+  <p><span class="violation-label">Violacao</span> Botoes sem nome acessivel:</p>
+  <button style="padding: 0.5rem;"><img src="https://via.placeholder.com/20x20?text=X" width="20" height="20"></button>
+  <button style="padding: 0.5rem;"></button>
+</section>
+
+<!-- link-name -->
+<section>
+  <p><span class="rule-id">link-name</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
+  <p><span class="violation-label">Violacao</span> Links sem texto:</p>
+  <a href="/pagina1"><img src="https://via.placeholder.com/30x20?text=Ir" width="30" height="20"></a>
+  <a href="/pagina2"></a>
+</section>
+
+<!-- conteudo-lorem-ipsum -->
+<section>
+  <p><span class="rule-id">conteudo-lorem-ipsum</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
+  <p><span class="violation-label">Violacao</span> Texto placeholder:</p>
   <p>
-    Considerando a imprescindibilidade da observância dos preceitos constitucionais
-    fundamentais atinentes à salvaguarda dos direitos e garantias individuais,
-    precipuamente no que concerne à inviolabilidade do domicílio e à preservação
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+  </p>
+</section>
+
+<!-- autoplay-video-audio -->
+<section>
+  <p><span class="rule-id">autoplay-video-audio</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
+  <p><span class="violation-label">Violacao</span> Video com autoplay (comentado para nao irritar):</p>
+  <!-- Descomente para testar:
+  <video autoplay src="video.mp4" width="320"></video>
+  -->
+  <pre>&lt;video autoplay src="video.mp4"&gt;&lt;/video&gt;</pre>
+</section>
+
+<!-- ============================================ -->
+<!-- LIKELY - ALTA PROBABILIDADE (~90%) -->
+<!-- ============================================ -->
+<h2><span class="confidence-badge confidence-likely">LIKELY</span> Alta Probabilidade (~90%)</h2>
+<p>Violacoes com alta probabilidade, mas podem ter excecoes validas.</p>
+
+<!-- color-contrast -->
+<section>
+  <p><span class="rule-id">color-contrast</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Texto com baixo contraste:</p>
+  <p style="color: #aaa; background: #fff;">Este texto cinza claro tem contraste insuficiente.</p>
+  <p style="color: #999; background: #ccc;">Este texto tambem tem contraste ruim.</p>
+</section>
+
+<!-- imagem-alt-nome-arquivo -->
+<section>
+  <p><span class="rule-id">imagem-alt-nome-arquivo</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Alt parece nome de arquivo:</p>
+  <img src="https://via.placeholder.com/150x100" alt="IMG_20241220_143052.jpg" width="150" height="100">
+  <img src="https://via.placeholder.com/120x80" alt="DSC_0042.png" width="120" height="80">
+  <img src="https://via.placeholder.com/100x100" alt="Screenshot_2024-12-20.png" width="100" height="100">
+</section>
+
+<!-- texto-justificado -->
+<section>
+  <p><span class="rule-id">texto-justificado</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Texto com alinhamento justificado:</p>
+  <p class="justified-text">
+    Este paragrafo usa text-align: justify, o que pode criar espacos irregulares entre palavras
+    e dificultar a leitura para pessoas com dislexia ou baixa visao. A WCAG 1.4.8 (AAA) recomenda
+    evitar texto justificado para melhorar a legibilidade. O problema e especialmente grave em
+    colunas estreitas onde os espacos ficam muito grandes.
+  </p>
+</section>
+
+<!-- texto-maiusculo-css -->
+<section>
+  <p><span class="rule-id">texto-maiusculo-css</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Texto em maiusculas via CSS:</p>
+  <p class="uppercase-text">
+    Este paragrafo inteiro esta em maiusculas via CSS (text-transform: uppercase).
+    Texto todo em maiusculas e mais dificil de ler, especialmente para pessoas com dislexia.
+  </p>
+</section>
+
+<!-- br-excessivo-layout -->
+<section>
+  <p><span class="rule-id">br-excessivo-layout</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Multiplos BR para espacamento:</p>
+  <p>Primeiro paragrafo</p>
+  <br><br><br><br>
+  <p>Segundo paragrafo (separado por 4 BR tags)</p>
+</section>
+
+<!-- emag-tabela-layout -->
+<section>
+  <p><span class="rule-id">emag-tabela-layout</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Tabela usada para layout:</p>
+  <table border="0" cellpadding="10" cellspacing="0" width="100%">
+    <tr>
+      <td style="background: #f0f0f0;">Menu lateral</td>
+      <td style="background: #fff;">
+        <h3 style="margin-top: 0;">Conteudo principal</h3>
+        <p>Esta tabela esta sendo usada para layout em vez de CSS.</p>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<!-- captcha-sem-alternativa -->
+<section>
+  <p><span class="rule-id">captcha-sem-alternativa</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> CAPTCHA visual sem alternativa de audio:</p>
+  <div class="g-recaptcha" data-sitekey="fake-key-for-testing" style="border: 1px solid #ccc; padding: 1rem; display: inline-block;">
+    <label style="display: flex; align-items: center; gap: 0.5rem;">
+      <input type="checkbox"> Nao sou um robo
+    </label>
+    <small style="color: #666;">reCAPTCHA (simulado - sem botao de audio)</small>
+  </div>
+</section>
+
+<!-- animacao-sem-pause -->
+<section>
+  <p><span class="rule-id">animacao-sem-pause</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Animacao infinita sem controle de pausa:</p>
+  <div style="display: flex; gap: 1rem; align-items: center;">
+    <div class="animated-box">Pulsando</div>
+    <p style="margin: 0;">Esta caixa pulsa infinitamente sem opcao de pausar.</p>
+  </div>
+</section>
+
+<!-- fonte-muito-pequena -->
+<section>
+  <p><span class="rule-id">fonte-muito-pequena</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Texto com fonte menor que 12px:</p>
+  <p class="tiny-text">Este texto tem apenas 9px de tamanho, muito pequeno para leitura confortavel.</p>
+  <p style="font-size: 10px;">Este texto tem 10px, ainda abaixo do minimo recomendado.</p>
+</section>
+
+<!-- ============================================ -->
+<!-- NEEDS_REVIEW - PRECISA VERIFICACAO HUMANA -->
+<!-- ============================================ -->
+<h2><span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span> Precisa Verificacao</h2>
+<p>Violacoes que requerem verificacao humana para confirmar.</p>
+
+<!-- link-texto-generico -->
+<section>
+  <p><span class="rule-id">link-texto-generico</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Links com texto generico:</p>
+  <p>Para saber mais sobre nossos servicos, <a href="/servicos">clique aqui</a>.</p>
+  <p>Veja a documentacao completa: <a href="/docs">saiba mais</a></p>
+  <p>Acesse agora: <a href="/login">acesse</a></p>
+  <p>Baixe o arquivo: <a href="/arquivo.pdf">baixar</a></p>
+</section>
+
+<!-- rotulo-curto-ambiguo -->
+<section>
+  <p><span class="rule-id">rotulo-curto-ambiguo</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Botoes/links com rotulos muito curtos:</p>
+  <button style="padding: 0.5rem 1rem;">X</button>
+  <button style="padding: 0.5rem 1rem;">></button>
+  <button style="padding: 0.5rem 1rem;"><</button>
+  <a href="/next">+</a>
+</section>
+
+<!-- landmark-one-main / region -->
+<section>
+  <p><span class="rule-id">landmark-one-main / region</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Conteudo fora de landmarks:</p>
+  <p>Esta pagina nao tem elemento <code>&lt;main&gt;</code> e o conteudo nao esta em landmarks semanticos.</p>
+</section>
+
+<!-- ============================================ -->
+<!-- EXPERIMENTAL - REGRAS EM TESTE -->
+<!-- ============================================ -->
+<h2><span class="confidence-badge experimental">EXPERIMENTAL</span> Regras Experimentais</h2>
+<p>Regras que ainda estao em fase de teste e podem ter mais falsos positivos.</p>
+
+<!-- legibilidade-texto-complexo (COGA) -->
+<section>
+  <p><span class="rule-id">legibilidade-texto-complexo</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Texto com baixa legibilidade (Flesch &lt; 50):</p>
+  <p>
+    Considerando a imprescindibilidade da observancia dos preceitos constitucionais
+    fundamentais atinentes a salvaguarda dos direitos e garantias individuais,
+    precipuamente no que concerne a inviolabilidade do domicilio e a preservacao
     da intimidade, vida privada, honra e imagem das pessoas, conforme estabelecido
-    no artigo quinto da Constituição Federal, impõe-se a necessidade de implementação
-    de mecanismos procedimentais que assegurem a efetivação dos princípios basilares
-    do ordenamento jurídico pátrio, mormente aqueles relacionados à dignidade da
-    pessoa humana e à proporcionalidade das medidas restritivas de direitos
-    fundamentais, sob pena de caracterização de inconstitucionalidade manifesta
-    e consequente nulidade absoluta dos atos administrativos praticados em
-    desconformidade com os parâmetros normativos vigentes.
+    no artigo quinto da Constituicao Federal, impoe-se a necessidade de implementacao
+    de mecanismos procedimentais que assegurem a efetivacao dos principios basilares
+    do ordenamento juridico patrio, mormente aqueles relacionados a dignidade da
+    pessoa humana e a proporcionalidade das medidas restritivas de direitos.
   </p>
 </section>
 
+<!-- siglas-sem-expansao (COGA) -->
 <section>
-  <p><span class="violation-label">Violação</span> Texto técnico-científico:</p>
+  <p><span class="rule-id">siglas-sem-expansao</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Siglas brasileiras sem expansao:</p>
   <p>
-    A implementação de metodologias heurísticas para otimização de algoritmos
-    computacionais de alta complexidade temporal requer a consideração de
-    múltiplos parâmetros interdependentes, incluindo a análise assintótica
-    do comportamento das estruturas de dados subjacentes, a avaliação da
-    eficiência espacial em termos de utilização de memória heap e stack,
-    bem como a ponderação dos trade-offs inerentes às diferentes abordagens
-    arquiteturais disponíveis para a resolução de problemas NP-completos
-    mediante aproximações polinomiais determinísticas ou probabilísticas.
+    O BNDES anunciou novas linhas de credito em parceria com o SEBRAE para
+    apoiar pequenas empresas. A medida foi aprovada pelo CMN e tera impacto
+    direto no PIB nacional. O TCU fiscalizara a aplicacao dos recursos.
+    Empresas optantes pelo SIMPLES terao condicoes especiais conforme a LGPD.
   </p>
 </section>
 
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Texto simples e claro:</p>
-  <p>
-    Para criar uma conta, clique no botão "Cadastrar" e preencha seus dados.
-    Você vai precisar informar seu nome, email e criar uma senha.
-    Depois de preencher tudo, clique em "Enviar" e pronto!
-    Você vai receber um email para confirmar seu cadastro.
-  </p>
-</section>
-
-<!-- ============================================ -->
-<!-- 2. SIGLAS-SEM-EXPANSAO -->
-<!-- ============================================ -->
-<h2>2. Siglas sem Expansão</h2>
-<p><span class="rule-id">siglas-sem-expansao</span> - Siglas sem <code>&lt;abbr title&gt;</code></p>
-
+<!-- linguagem-inconsistente (COGA) -->
 <section>
-  <p><span class="violation-label">Violação</span> Siglas sem explicação:</p>
-  <p>
-    O BNDES anunciou novas linhas de crédito em parceria com o SEBRAE para
-    apoiar pequenas empresas. A medida foi aprovada pelo CMN e terá impacto
-    direto no PIB nacional. O TCU fiscalizará a aplicação dos recursos,
-    enquanto o CGU fará auditorias periódicas. Empresas optantes pelo SIMPLES
-    terão condições especiais de acordo com a LGPD.
-  </p>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> Siglas técnicas sem expansão:</p>
-  <p>
-    Nossa API REST utiliza JWT para autenticação e RBAC para controle de acesso.
-    Os dados são armazenados em formato JSON e transmitidos via HTTPS com TLS 1.3.
-    O sistema suporta SSO via SAML ou OIDC, com MFA obrigatório para acessos sensíveis.
-  </p>
-</section>
-
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Siglas com <code>&lt;abbr&gt;</code>:</p>
-  <p>
-    O <abbr title="Banco Nacional de Desenvolvimento Econômico e Social">BNDES</abbr>
-    anunciou novas linhas de crédito em parceria com o
-    <abbr title="Serviço Brasileiro de Apoio às Micro e Pequenas Empresas">SEBRAE</abbr>.
-    A medida impactará o <abbr title="Produto Interno Bruto">PIB</abbr> nacional.
-  </p>
-</section>
-
-<!-- ============================================ -->
-<!-- 3. LINGUAGEM-INCONSISTENTE -->
-<!-- ============================================ -->
-<h2>3. Linguagem Inconsistente</h2>
-<p><span class="rule-id">linguagem-inconsistente</span> - Texto em inglês sem <code>lang="en"</code></p>
-
-<section>
-  <p><span class="violation-label">Violação</span> Texto em inglês sem marcação:</p>
+  <p><span class="rule-id">linguagem-inconsistente</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Texto em ingles sem marcacao de idioma:</p>
   <p>
     Welcome to our website! We are happy to have you here.
     Please feel free to browse through our products and services.
     If you have any questions, don't hesitate to contact us.
-    Our team is always ready to help you with whatever you need.
   </p>
 </section>
 
+<!-- emag-breadcrumb -->
 <section>
-  <p><span class="violation-label">Violação</span> Texto misto sem marcação:</p>
-  <p>
-    Nosso novo feature de dashboard permite que você track all your metrics
-    in real-time. The user experience was designed to be intuitive and
-    easy to use for everyone on your team.
-  </p>
+  <p><span class="rule-id">emag-breadcrumb</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Pagina sem breadcrumb:</p>
+  <p>Esta pagina interna nao possui navegacao de breadcrumb para ajudar usuarios a entender sua localizacao no site.</p>
 </section>
 
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Texto em inglês com <code>lang="en"</code>:</p>
-  <p>
-    Confira nossa mensagem em inglês:
-    <span lang="en">Welcome to our website! We are happy to have you here.</span>
-  </p>
-</section>
-
-<!-- ============================================ -->
-<!-- 4. TIMEOUT-SEM-AVISO -->
-<!-- ============================================ -->
-<h2>4. Timeout sem Aviso</h2>
-<p><span class="rule-id">timeout-sem-aviso</span> - Formulários com timeout sem aviso visível</p>
-
+<!-- brasil-libras-plugin -->
 <section>
-  <p><span class="violation-label">Violação</span> Formulário com timeout implícito:</p>
-  <p>Preencha o formulário abaixo:</p>
-  <form>
-    <div style="margin-bottom: 1rem;">
-      <label for="nome">Nome:</label><br>
-      <input type="text" id="nome" name="nome" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div style="margin-bottom: 1rem;">
-      <label for="email">Email:</label><br>
-      <input type="email" id="email" name="email" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div style="margin-bottom: 1rem;">
-      <label for="cartao">Número do Cartão:</label><br>
-      <input type="text" id="cartao" name="cartao" placeholder="0000 0000 0000 0000" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <button type="submit" style="background: #6b46c1; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">
-      Finalizar Pagamento
-    </button>
-  </form>
-  <p style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;">
-    <!-- Nota: O meta refresh no head simula o timeout da sessão -->
-    (Esta página tem meta refresh configurado - descomente no HTML para testar)
-  </p>
+  <p><span class="rule-id">brasil-libras-plugin</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
+  <p><span class="violation-label">Violacao</span> Site sem plugin de Libras:</p>
+  <p>Este site nao possui VLibras, Hand Talk, SignAll ou outro plugin de traducao para Libras.</p>
 </section>
 
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Formulário com aviso de timeout:</p>
-  <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-    <strong>⏱️ Aviso de sessão:</strong> Sua sessão expira em 15 minutos.
-    <button style="background: #f59e0b; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">
-      Estender tempo
-    </button>
-  </div>
-  <form>
-    <div style="margin-bottom: 1rem;">
-      <label for="nome2">Nome:</label><br>
-      <input type="text" id="nome2" name="nome" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <button type="submit" style="background: #22c55e; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">
-      Enviar
-    </button>
-  </form>
-</section>
-
-<!-- ============================================ -->
-<!-- 5. CAPTCHA-SEM-ALTERNATIVA -->
-<!-- ============================================ -->
-<h2>5. CAPTCHA sem Alternativa</h2>
-<p><span class="rule-id">captcha-sem-alternativa</span> - CAPTCHA visual sem opção de áudio</p>
-
+<!-- emag-skip-links -->
 <section>
-  <p><span class="violation-label">Violação</span> CAPTCHA apenas visual:</p>
-  <div style="background: #f3f4f6; padding: 1rem; border-radius: 4px; text-align: center;">
-    <!-- Simulação de reCAPTCHA sem áudio -->
-    <div class="g-recaptcha" data-sitekey="fake-key-for-testing">
-      <div style="border: 1px solid #ccc; padding: 1rem; background: white; display: inline-block;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <input type="checkbox" id="robot">
-          <label for="robot">Não sou um robô</label>
-        </div>
-        <div style="font-size: 0.625rem; color: #666; margin-top: 0.5rem;">
-          reCAPTCHA (simulado)
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> hCaptcha sem alternativas:</p>
-  <div style="background: #f3f4f6; padding: 1rem; border-radius: 4px; text-align: center;">
-    <div class="h-captcha" data-sitekey="fake-hcaptcha-key">
-      <div style="border: 1px solid #0074bf; padding: 1rem; background: white; display: inline-block;">
-        <p style="margin: 0; font-size: 0.875rem;">Selecione todas as imagens com semáforos</p>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 0.5rem;">
-          <div style="width: 60px; height: 60px; background: #ddd;"></div>
-          <div style="width: 60px; height: 60px; background: #ddd;"></div>
-          <div style="width: 60px; height: 60px; background: #ddd;"></div>
-          <div style="width: 60px; height: 60px; background: #ddd;"></div>
-          <div style="width: 60px; height: 60px; background: #ddd;"></div>
-          <div style="width: 60px; height: 60px; background: #ddd;"></div>
-        </div>
-        <div style="font-size: 0.625rem; color: #666; margin-top: 0.5rem;">
-          hCaptcha (simulado)
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="correct">
-  <p><span class="violation-label">Correto</span> CAPTCHA com alternativa de áudio:</p>
-  <div style="background: #f3f4f6; padding: 1rem; border-radius: 4px; text-align: center;">
-    <div style="border: 1px solid #ccc; padding: 1rem; background: white; display: inline-block;">
-      <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Verificação de segurança</p>
-      <div style="display: flex; gap: 0.5rem; justify-content: center;">
-        <button style="padding: 0.5rem; border: 1px solid #ccc; background: white; cursor: pointer;" title="Verificação visual">
-          🖼️ Visual
-        </button>
-        <button style="padding: 0.5rem; border: 1px solid #ccc; background: white; cursor: pointer;" title="Verificação por áudio">
-          🔊 Áudio
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================ -->
-<!-- 6. ANIMACAO-SEM-PAUSE -->
-<!-- ============================================ -->
-<h2>6. Animação sem Controle de Pausa</h2>
-<p><span class="rule-id">animacao-sem-pause</span> - Animações CSS/GIF sem botão de pausar</p>
-
-<section>
-  <p><span class="violation-label">Violação</span> Animação CSS infinita sem controle:</p>
-  <div style="display: flex; gap: 1rem; align-items: center;">
-    <div class="animated-box">
-      Pulsando
-    </div>
-    <p style="margin: 0;">Esta caixa pulsa e desliza infinitamente sem opção de pausar.</p>
-  </div>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> Ícone girando infinitamente:</p>
-  <div style="display: flex; gap: 1rem; align-items: center;">
-    <div class="spinning" style="width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: #6b46c1; border-radius: 50%;"></div>
-    <p style="margin: 0;">Carregando... (spinner infinito sem controle)</p>
-  </div>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> GIF animado:</p>
-  <div style="display: flex; gap: 1rem; align-items: center;">
-    <!-- Simulação de GIF (na prática seria um arquivo .gif) -->
-    <div style="width: 100px; height: 100px; background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3); background-size: 400% 400%; animation: gradient 3s ease infinite; border-radius: 8px;"></div>
-    <style>
-      @keyframes gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-    </style>
-    <p style="margin: 0;">Banner animado sem controle de pausa.</p>
-  </div>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> SVG animado:</p>
-  <div style="display: flex; gap: 1rem; align-items: center;">
-    <svg width="80" height="80" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="40" fill="none" stroke="#6b46c1" stroke-width="8">
-        <animate attributeName="stroke-dasharray" values="0 251.2;251.2 0" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="50" cy="50" r="25" fill="#6b46c1">
-        <animate attributeName="r" values="25;30;25" dur="1s" repeatCount="indefinite"/>
-      </circle>
-    </svg>
-    <p style="margin: 0;">SVG com animação SMIL infinita.</p>
-  </div>
-</section>
-
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Animação com controle de pausa:</p>
-  <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-    <div id="controlled-animation" class="animated-box">
-      Animado
-    </div>
-    <div>
-      <button onclick="toggleAnimation()" style="background: #6b46c1; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-        ⏸️ Pausar Animação
-      </button>
-      <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #666;">
-        Usuários com <code>prefers-reduced-motion</code> também são respeitados.
-      </p>
-    </div>
-  </div>
-  <script>
-    let isPaused = false;
-    function toggleAnimation() {
-      const box = document.getElementById('controlled-animation');
-      const btn = event.target;
-      if (isPaused) {
-        box.style.animationPlayState = 'running';
-        btn.textContent = '⏸️ Pausar Animação';
-      } else {
-        box.style.animationPlayState = 'paused';
-        btn.textContent = '▶️ Retomar Animação';
-      }
-      isPaused = !isPaused;
-    }
-
-    // Respeitar preferência do usuário
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.getElementById('controlled-animation').style.animationPlayState = 'paused';
-    }
-  </script>
+  <p><span class="rule-id">emag-skip-links</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
+  <p><span class="violation-label">Violacao</span> Pagina sem links de pular:</p>
+  <p>Esta pagina nao tem links de "Pular para o conteudo principal" no inicio.</p>
 </section>
 
 <!-- ============================================ -->
 <!-- WCAG PARTIAL RULES -->
 <!-- ============================================ -->
-<div class="wcag-partial" style="margin-top: 3rem; padding: 1rem; border-radius: 8px;">
-<h2 style="margin-top: 0;">WCAG Partial Detection Rules</h2>
-<p>As regras abaixo detectam problemas que normalmente requerem verificação manual, mas podem ser parcialmente automatizadas.</p>
-</div>
+<h2>WCAG Partial Rules</h2>
+<p>Regras WCAG com deteccao parcial automatizada.</p>
 
-<!-- ============================================ -->
-<!-- 7. INPUT-SEM-AUTOCOMPLETE -->
-<!-- ============================================ -->
-<h2>7. Input sem Autocomplete</h2>
-<p><span class="rule-id">input-sem-autocomplete</span> - WCAG 1.3.5 (AA) - Campos que coletam dados pessoais sem atributo autocomplete</p>
-
+<!-- input-sem-autocomplete -->
 <section>
-  <p><span class="violation-label">Violação</span> Formulário de cadastro sem autocomplete:</p>
-  <form style="display: grid; gap: 1rem; max-width: 400px;">
+  <p><span class="rule-id">input-sem-autocomplete</span></p>
+  <p><span class="violation-label">Violacao</span> Campos sem autocomplete:</p>
+  <form style="display: grid; gap: 0.5rem; max-width: 300px;">
     <div>
-      <label for="user-name">Nome completo:</label><br>
-      <input type="text" id="user-name" name="name" placeholder="João da Silva" style="width: 100%; padding: 0.5rem;">
+      <label for="nome">Nome completo:</label>
+      <input type="text" id="nome" name="name" placeholder="Joao da Silva" style="width: 100%; padding: 0.5rem;">
     </div>
     <div>
-      <label for="user-email">Email:</label><br>
-      <input type="email" id="user-email" name="email" placeholder="joao@email.com" style="width: 100%; padding: 0.5rem;">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" placeholder="joao@email.com" style="width: 100%; padding: 0.5rem;">
     </div>
     <div>
-      <label for="user-phone">Telefone:</label><br>
-      <input type="tel" id="user-phone" name="phone" placeholder="(11) 99999-9999" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="user-address">Endereço:</label><br>
-      <input type="text" id="user-address" name="address" placeholder="Rua das Flores, 123" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="user-cep">CEP:</label><br>
-      <input type="text" id="user-cep" name="cep" placeholder="01234-567" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="user-cpf">CPF:</label><br>
-      <input type="text" id="user-cpf" name="cpf" placeholder="123.456.789-00" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="user-birthday">Data de Nascimento:</label><br>
-      <input type="date" id="user-birthday" name="birthday" style="width: 100%; padding: 0.5rem;">
+      <label for="telefone">Telefone:</label>
+      <input type="tel" id="telefone" name="phone" placeholder="(11) 99999-9999" style="width: 100%; padding: 0.5rem;">
     </div>
   </form>
 </section>
 
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Formulário com autocomplete apropriado:</p>
-  <form style="display: grid; gap: 1rem; max-width: 400px;">
-    <div>
-      <label for="correct-name">Nome completo:</label><br>
-      <input type="text" id="correct-name" name="name" autocomplete="name" placeholder="João da Silva" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="correct-email">Email:</label><br>
-      <input type="email" id="correct-email" name="email" autocomplete="email" placeholder="joao@email.com" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="correct-phone">Telefone:</label><br>
-      <input type="tel" id="correct-phone" name="phone" autocomplete="tel" placeholder="(11) 99999-9999" style="width: 100%; padding: 0.5rem;">
-    </div>
-  </form>
-</section>
-
-<!-- ============================================ -->
-<!-- 8. LINK-SEM-UNDERLINE-EM-TEXTO -->
-<!-- ============================================ -->
-<h2>8. Link sem Sublinhado em Texto</h2>
-<p><span class="rule-id">link-sem-underline-em-texto</span> - WCAG 1.4.1 (A) - Links em texto corrido devem ter sublinhado ou indicador visual além da cor</p>
-
+<!-- link-sem-underline-em-texto -->
 <section>
-  <p><span class="violation-label">Violação</span> Links sem sublinhado em texto corrido:</p>
+  <p><span class="rule-id">link-sem-underline-em-texto</span></p>
+  <p><span class="violation-label">Violacao</span> Links sem sublinhado em texto corrido:</p>
   <div class="text-block">
     <p>
-      Para saber mais sobre acessibilidade web, você pode visitar o site do
-      <a href="https://www.w3.org" class="no-underline">W3C</a> e ler as diretrizes
+      Para saber mais sobre acessibilidade, visite o site do
+      <a href="https://www.w3.org" class="no-underline">W3C</a> e leia as diretrizes
       <a href="https://www.w3.org/WAI/WCAG22" class="no-underline">WCAG 2.2</a>.
-      No Brasil, recomendamos também consultar o
-      <a href="https://emag.governoeletronico.gov.br" class="no-underline">eMAG 3.1</a>
-      do Governo Federal. Se você tiver dúvidas, entre em
-      <a href="/contato" class="no-underline">contato conosco</a>.
-    </p>
-    <p>
-      Nossa equipe está disponível de segunda a sexta, das 9h às 18h.
-      Você também pode nos encontrar nas redes sociais:
-      <a href="https://twitter.com" class="no-underline">Twitter</a>,
-      <a href="https://linkedin.com" class="no-underline">LinkedIn</a> e
-      <a href="https://github.com" class="no-underline">GitHub</a>.
+      No Brasil, consulte o <a href="https://emag.governoeletronico.gov.br" class="no-underline">eMAG 3.1</a>.
     </p>
   </div>
 </section>
 
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Links com sublinhado:</p>
-  <div class="text-block">
-    <p>
-      Para saber mais sobre acessibilidade web, você pode visitar o site do
-      <a href="https://www.w3.org" class="with-underline">W3C</a> e ler as diretrizes
-      <a href="https://www.w3.org/WAI/WCAG22" class="with-underline">WCAG 2.2</a>.
-      Estes links são claramente identificáveis por usuários com daltonismo.
-    </p>
-  </div>
-</section>
-
-<!-- ============================================ -->
-<!-- 9. VIDEO-SEM-LEGENDAS -->
-<!-- ============================================ -->
-<h2>9. Vídeo sem Legendas</h2>
-<p><span class="rule-id">video-sem-legendas</span> - WCAG 1.2.2 (A) - Vídeos devem ter legendas para usuários surdos</p>
-
+<!-- video-sem-legendas -->
 <section>
-  <p><span class="violation-label">Violação</span> Vídeo HTML5 sem track de legendas:</p>
-  <video width="400" controls style="background: #000; border-radius: 8px;">
+  <p><span class="rule-id">video-sem-legendas</span></p>
+  <p><span class="violation-label">Violacao</span> Video sem track de legendas:</p>
+  <video width="320" controls style="background: #000; border-radius: 8px;">
     <source src="video-exemplo.mp4" type="video/mp4">
-    Seu navegador não suporta vídeo HTML5.
+    Seu navegador nao suporta video HTML5.
   </video>
-  <p style="font-size: 0.875rem; color: #666;">Este vídeo não tem elemento &lt;track&gt; para legendas.</p>
 </section>
 
+<!-- select-onchange-navega -->
 <section>
-  <p><span class="violation-label">Violação</span> Vídeo do YouTube incorporado (sem legendas visíveis):</p>
-  <iframe
-    width="400"
-    height="225"
-    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-    title="Vídeo do YouTube sem legendas"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-    style="border-radius: 8px;">
-  </iframe>
-  <p style="font-size: 0.875rem; color: #666;">Iframe do YouTube - verificar se legendas estão disponíveis na plataforma.</p>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> Vídeo do Vimeo incorporado:</p>
-  <iframe
-    width="400"
-    height="225"
-    src="https://player.vimeo.com/video/76979871"
-    title="Vídeo do Vimeo sem legendas"
-    frameborder="0"
-    allow="autoplay; fullscreen; picture-in-picture"
-    allowfullscreen
-    style="border-radius: 8px;">
-  </iframe>
-  <p style="font-size: 0.875rem; color: #666;">Iframe do Vimeo - verificar se legendas estão disponíveis na plataforma.</p>
-</section>
-
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Vídeo com track de legendas:</p>
-  <video width="400" controls style="background: #000; border-radius: 8px;">
-    <source src="video-exemplo.mp4" type="video/mp4">
-    <track kind="captions" src="legendas.vtt" srclang="pt-BR" label="Português" default>
-    Seu navegador não suporta vídeo HTML5.
-  </video>
-  <p style="font-size: 0.875rem; color: #666;">Este vídeo tem elemento &lt;track kind="captions"&gt;.</p>
-</section>
-
-<!-- ============================================ -->
-<!-- 10. VIDEO-SEM-AUDIODESCRICAO -->
-<!-- ============================================ -->
-<h2>10. Vídeo sem Audiodescrição</h2>
-<p><span class="rule-id">video-sem-audiodescricao</span> - WCAG 1.2.5 (AA) - Vídeos com conteúdo visual importante devem ter audiodescrição</p>
-
-<section>
-  <p><span class="violation-label">Violação</span> Vídeo sem track de audiodescrição:</p>
-  <video width="400" controls style="background: #000; border-radius: 8px;">
-    <source src="video-tutorial.mp4" type="video/mp4">
-    <track kind="captions" src="legendas.vtt" srclang="pt-BR" label="Português">
-    Seu navegador não suporta vídeo HTML5.
-  </video>
-  <p style="font-size: 0.875rem; color: #666;">
-    Este vídeo tem legendas, mas não tem audiodescrição.
-    Se o conteúdo visual for essencial (ex: tutorial mostrando interface),
-    usuários cegos não conseguirão acompanhar.
-  </p>
-</section>
-
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Vídeo com audiodescrição:</p>
-  <video width="400" controls style="background: #000; border-radius: 8px;">
-    <source src="video-tutorial.mp4" type="video/mp4">
-    <track kind="captions" src="legendas.vtt" srclang="pt-BR" label="Português">
-    <track kind="descriptions" src="audiodescricao.vtt" srclang="pt-BR" label="Audiodescrição">
-    Seu navegador não suporta vídeo HTML5.
-  </video>
-  <p style="font-size: 0.875rem; color: #666;">Este vídeo tem &lt;track kind="descriptions"&gt; para audiodescrição.</p>
-</section>
-
-<!-- ============================================ -->
-<!-- 11. SELECT-ONCHANGE-NAVEGA -->
-<!-- ============================================ -->
-<h2>11. Select que Navega Automaticamente</h2>
-<p><span class="rule-id">select-onchange-navega</span> - WCAG 3.2.2 (A) - Selects não devem navegar automaticamente ao mudar</p>
-
-<section>
-  <p><span class="violation-label">Violação</span> Select que navega ao mudar (onchange com location):</p>
-  <label for="nav-select-1">Escolha uma página:</label><br>
-  <select id="nav-select-1" onchange="location.href=this.value" style="padding: 0.5rem; min-width: 200px;">
+  <p><span class="rule-id">select-onchange-navega</span></p>
+  <p><span class="violation-label">Violacao</span> Select que navega automaticamente:</p>
+  <label for="nav-select">Ir para pagina:</label>
+  <select id="nav-select" onchange="location.href=this.value" style="padding: 0.5rem;">
     <option value="">-- Selecione --</option>
-    <option value="/home">Página Inicial</option>
+    <option value="/home">Pagina Inicial</option>
     <option value="/produtos">Produtos</option>
     <option value="/contato">Contato</option>
-    <option value="/sobre">Sobre Nós</option>
   </select>
-  <p style="font-size: 0.875rem; color: #666;">
-    Este select navega automaticamente ao mudar. Usuários de teclado podem acionar
-    navegação indesejada ao navegar pelas opções.
-  </p>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> Select com window.location:</p>
-  <label for="nav-select-2">Ir para seção:</label><br>
-  <select id="nav-select-2" onchange="window.location=this.value" style="padding: 0.5rem; min-width: 200px;">
-    <option value="">-- Selecione --</option>
-    <option value="#secao1">Seção 1</option>
-    <option value="#secao2">Seção 2</option>
-    <option value="#secao3">Seção 3</option>
-  </select>
-</section>
-
-<section>
-  <p><span class="violation-label">Violação</span> Select com document.location:</p>
-  <label for="nav-select-3">Mudar idioma:</label><br>
-  <select id="nav-select-3" onchange="document.location.href='/lang/' + this.value" style="padding: 0.5rem; min-width: 200px;">
-    <option value="pt-BR">Português</option>
-    <option value="en">English</option>
-    <option value="es">Español</option>
-  </select>
-</section>
-
-<section class="correct">
-  <p><span class="violation-label">Correto</span> Select com botão de confirmação:</p>
-  <form style="display: flex; gap: 0.5rem; align-items: end;">
-    <div>
-      <label for="nav-select-correct">Escolha uma página:</label><br>
-      <select id="nav-select-correct" style="padding: 0.5rem; min-width: 200px;">
-        <option value="">-- Selecione --</option>
-        <option value="/home">Página Inicial</option>
-        <option value="/produtos">Produtos</option>
-        <option value="/contato">Contato</option>
-      </select>
-    </div>
-    <button type="submit" style="background: #22c55e; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-      Ir
-    </button>
-  </form>
-  <p style="font-size: 0.875rem; color: #666;">
-    Este select tem um botão "Ir" separado para confirmar a navegação.
-  </p>
 </section>
 
 <!-- ============================================ -->
 <!-- RESUMO -->
 <!-- ============================================ -->
-<h2>Resumo das Violações Esperadas</h2>
+<h2>Resumo de Violacoes por Nivel de Confianca</h2>
 <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
   <thead>
     <tr style="background: #f3e8ff;">
-      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Regra</th>
-      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Violações</th>
-      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Severidade</th>
+      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Nivel</th>
+      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Regras</th>
+      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Violacoes Esperadas</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>legibilidade-texto-complexo</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">2 parágrafos</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Moderate</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge confidence-certain">CERTAIN</span></td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">image-alt, button-name, link-name, conteudo-lorem-ipsum</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~6-8</td>
     </tr>
     <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>siglas-sem-expansao</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~15 siglas</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Minor</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge confidence-likely">LIKELY</span></td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">color-contrast, imagem-alt-nome-arquivo, texto-justificado, br-excessivo-layout, fonte-muito-pequena</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~8-12</td>
     </tr>
     <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>linguagem-inconsistente</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">2 parágrafos</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Minor</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">link-texto-generico, rotulo-curto-ambiguo, landmark-one-main</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~5-8</td>
     </tr>
     <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>timeout-sem-aviso</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">0-1 (meta refresh)</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Serious</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>captcha-sem-alternativa</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">2 CAPTCHAs</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Serious</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>animacao-sem-pause</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">4 animações</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Moderate</td>
-    </tr>
-    <tr style="background: #eff6ff;">
-      <td colspan="3" style="padding: 0.75rem; border: 1px solid #e5e7eb; font-weight: bold;">WCAG Partial Rules</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>input-sem-autocomplete</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~7 campos</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Moderate</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>link-sem-underline-em-texto</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~7 links</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Moderate</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>video-sem-legendas</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">3 vídeos</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Serious</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>video-sem-audiodescricao</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">1 vídeo</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Moderate</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><code>select-onchange-navega</code></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">3 selects</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">Moderate</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge experimental">EXPERIMENTAL</span></td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">legibilidade-texto-complexo, siglas-sem-expansao, linguagem-inconsistente, brasil-libras-plugin, emag-breadcrumb</td>
+      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~5-8</td>
     </tr>
   </tbody>
 </table>
 
 <p style="margin-top: 2rem; padding: 1rem; background: #f3e8ff; border-radius: 8px;">
   <strong>Como testar:</strong><br>
-  1. Sirva este arquivo: <code>npx serve acctest</code> (ou similar)<br>
-  2. Crie um projeto apontando para a URL do servidor (ex: <code>http://localhost:3000</code>)<br>
-  3. Inicie uma auditoria (WCAG Partial está habilitado por padrão)<br>
-  4. Verifique as violações detectadas no Resumo de Conformidade
+  1. Sirva este arquivo: <code>npx serve acctest</code><br>
+  2. Crie um projeto apontando para a URL (ex: <code>http://localhost:3000</code>)<br>
+  3. Inicie uma auditoria com COGA habilitado<br>
+  4. Verifique os badges de confianca nas violacoes detectadas
 </p>
 
-<p style="padding: 1rem; background: #eff6ff; border-radius: 8px;">
-  <strong>Violações esperadas por WCAG SC:</strong><br>
-  • <strong>1.2.2</strong> (A) - video-sem-legendas<br>
-  • <strong>1.2.5</strong> (AA) - video-sem-audiodescricao<br>
-  • <strong>1.3.5</strong> (AA) - input-sem-autocomplete<br>
-  • <strong>1.4.1</strong> (A) - link-sem-underline-em-texto<br>
-  • <strong>3.2.2</strong> (A) - select-onchange-navega
+<p style="padding: 1rem; background: #dcfce7; border-radius: 8px;">
+  <strong>Filtros disponiveis na UI:</strong><br>
+  - Filtrar por nivel de confianca (Certain, Likely, Needs Review)<br>
+  - Mostrar/ocultar regras experimentais<br>
+  - Badges visuais com tooltip mostrando sinais de confianca
 </p>
 
 </body>
