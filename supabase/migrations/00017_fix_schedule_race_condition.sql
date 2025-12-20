@@ -66,6 +66,16 @@ BEGIN
       v_next := (v_target_date || ' ' || LPAD(p_hour::TEXT, 2, '0') || ':00:00')::TIMESTAMP AT TIME ZONE p_timezone;
   END CASE;
 
+  -- Safety check: se o resultado está no passado, adicionar 1 período
+  -- Isso pode acontecer quando a auditoria roda dentro da margem de tolerância
+  IF v_next <= p_from_time THEN
+    CASE p_frequency
+      WHEN 'daily' THEN v_next := v_next + INTERVAL '1 day';
+      WHEN 'weekly' THEN v_next := v_next + INTERVAL '7 days';
+      WHEN 'monthly' THEN v_next := v_next + INTERVAL '1 month';
+    END CASE;
+  END IF;
+
   RETURN v_next;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
