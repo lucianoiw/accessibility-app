@@ -465,7 +465,8 @@ Sistema de agendamento automatico de auditorias usando Trigger.dev scheduled tas
 - [x] Traducoes completas (pt-BR, en, es)
 
 **Arquivos criados:**
-- `supabase/migrations/00016_add_scheduled_audits.sql`
+- `supabase/migrations/00016_add_scheduled_audits.sql` - Schema e triggers originais
+- `supabase/migrations/00017_fix_schedule_race_condition.sql` - Fixes de race condition
 - `src/trigger/scheduled-audit.ts` - Task agendada do Trigger.dev
 - `src/app/api/projects/[id]/schedule/route.ts` - API de agendamento
 - `src/app/[locale]/(dashboard)/projects/[id]/settings/schedule/page.tsx`
@@ -474,10 +475,19 @@ Sistema de agendamento automatico de auditorias usando Trigger.dev scheduled tas
 **Como funciona:**
 1. Usuario configura frequencia, dia e hora em Settings > Schedule
 2. Trigger do banco calcula `next_scheduled_audit_at` automaticamente
-3. Task `check-scheduled-audits` roda a cada hora
+3. Task `check-scheduled-audits` roda a cada hora (cron: `0 * * * *`)
 4. Busca projetos com `schedule_enabled=true` e `next_scheduled_audit_at <= now()`
 5. Cria auditoria com `is_scheduled=true` e dispara `runAuditTask`
 6. Atualiza `last_scheduled_audit_at` e trigger recalcula proximo agendamento
+
+**Triggers do banco (migration 00017):**
+- `trg_update_next_scheduled_audit_insert` - Dispara em INSERT (sempre)
+- `trg_update_next_scheduled_audit_update` - Dispara em UPDATE quando configs mudam (usa `IS DISTINCT FROM`)
+
+**Logica de calculo `calculate_next_scheduled_audit()`:**
+- Margem de 1 minuto para evitar race condition (se atualizar entre HH:00:00 e HH:00:59, ainda considera "hoje")
+- Safety check: se resultado estiver no passado, adiciona 1 periodo (dia/semana/mes)
+- Suporta timezones (ex: America/Sao_Paulo)
 
 ### Gestao de Violacoes
 
