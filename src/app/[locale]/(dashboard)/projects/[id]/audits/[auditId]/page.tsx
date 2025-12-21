@@ -15,7 +15,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Link } from '@/i18n/navigation'
-import type { Audit, Project, AggregatedViolation, BrokenPage } from '@/types'
+import type { Audit, Project, AggregatedViolation, BrokenPage, ViolationOverride } from '@/types'
 import { AuditProgress } from './audit-progress'
 import { ViolationsFilter } from './violations-filter'
 import { ExportButton } from '@/components/reports/export-button'
@@ -109,6 +109,13 @@ export default async function AuditResultsPage({ params }: Props) {
     .select('*')
     .eq('audit_id', auditId)
     .order('error_type', { ascending: true })) as { data: BrokenPage[] | null }
+
+  // Buscar overrides do projeto (avaliacoes persistentes)
+  // Usando 'as any' porque violation_overrides ainda nao esta nos tipos gerados do Supabase
+  const { data: overrides } = await (supabase as any)
+    .from('violation_overrides')
+    .select('*')
+    .eq('project_id', id) as { data: ViolationOverride[] | null }
 
   const isInProgress = [
     'PENDING',
@@ -305,6 +312,8 @@ export default async function AuditResultsPage({ params }: Props) {
                 violations={violations ?? []}
                 includeAbnt={audit.include_abnt}
                 includeEmag={audit.include_emag}
+                overrides={overrides ?? []}
+                projectId={id}
               />
             </CardContent>
           </Card>

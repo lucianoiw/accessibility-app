@@ -254,6 +254,7 @@ export async function POST(
 /**
  * PATCH /api/violations/[id]/verify
  * Atualiza o status de uma violação manualmente
+ * Also saves to violation_overrides for persistence across audits
  */
 export async function PATCH(
   request: Request,
@@ -278,26 +279,42 @@ export async function PATCH(
   }
 
   const body = await request.json()
-  const { status, resolution_notes } = body as { status: ViolationStatus; resolution_notes?: string }
+  const { status, resolution_notes, save_override } = body as {
+    status: ViolationStatus
+    resolution_notes?: string
+    save_override?: boolean // If true, also save to violation_overrides for persistence
+  }
 
   if (!status || !['open', 'in_progress', 'fixed', 'ignored', 'false_positive'].includes(status)) {
     return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
   }
 
-  // Verificar acesso via audit -> project
+  // Verificar acesso via audit -> project e buscar dados para override
   const { data: violation } = await supabase
     .from('aggregated_violations')
     .select(`
       id,
+      rule_id,
+      sample_selector,
       audits!inner (
         project_id,
         projects!inner (
+          id,
           user_id
         )
-      )
+      ),
+      unique_elements
     `)
     .eq('id', violationId)
-    .single() as { data: { id: string; audits: { project_id: string; projects: { user_id: string } } } | null }
+    .single() as {
+      data: {
+        id: string
+        rule_id: string
+        sample_selector: string
+        audits: { project_id: string; projects: { id: string; user_id: string } }
+        unique_elements?: Array<{ xpath?: string }>
+      } | null
+    }
 
   if (!violation) {
     return NextResponse.json({ error: 'Violação não encontrada' }, { status: 404 })
@@ -307,8 +324,9 @@ export async function PATCH(
     return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
   }
 
-  // Atualizar status
   const adminSupabase = createAdminClient()
+
+  // Atualizar status na aggregated_violations
   const updateData: Record<string, unknown> = {
     status,
     resolved_by: ['fixed', 'ignored', 'false_positive'].includes(status) ? user.id : null,
@@ -322,6 +340,63 @@ export async function PATCH(
     .from('aggregated_violations')
     .update(updateData as never)
     .eq('id', violationId)
+
+  // Save to violation_overrides for persistence across audits
+  // Only for statuses that should persist: false_positive, ignored, fixed
+  const persistentStatuses = ['false_positive', 'ignored', 'fixed'] as const
+  if (persistentStatuses.includes(status as typeof persistentStatuses[number])) {
+    const projectId = violation.audits.project_id
+
+    // Get first element's xpath if available for more precise matching
+    const firstElementXpath = violation.unique_elements?.[0]?.xpath || null
+
+    try {
+      // Upsert the override
+      // Using 'as any' because violation_overrides is not yet in generated Supabase types
+      await (adminSupabase as any)
+        .from('violation_overrides')
+        .upsert(
+          {
+            project_id: projectId,
+            rule_id: violation.rule_id,
+            element_xpath: firstElementXpath,
+            element_content_hash: null,
+            override_type: status as 'false_positive' | 'ignored' | 'fixed',
+            notes: resolution_notes || null,
+            created_by: user.id,
+            last_seen_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'project_id,rule_id,COALESCE(element_xpath,\'\'),COALESCE(element_content_hash,\'\')',
+            ignoreDuplicates: false,
+          }
+        )
+
+      console.log(`[Verify PATCH] Saved override for ${violation.rule_id} in project ${projectId}`)
+    } catch (overrideError) {
+      // Log but don't fail - override is optional enhancement
+      console.error('[Verify PATCH] Failed to save override:', overrideError)
+    }
+  } else if (status === 'open') {
+    // If reopening, remove the override
+    const projectId = violation.audits.project_id
+    const firstElementXpath = violation.unique_elements?.[0]?.xpath || null
+
+    try {
+      // Using 'as any' because violation_overrides is not yet in generated Supabase types
+      await (adminSupabase as any)
+        .from('violation_overrides')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('rule_id', violation.rule_id)
+        .eq('element_xpath', firstElementXpath || '')
+
+      console.log(`[Verify PATCH] Removed override for ${violation.rule_id} in project ${projectId}`)
+    } catch (deleteError) {
+      console.error('[Verify PATCH] Failed to remove override:', deleteError)
+    }
+  }
 
   return NextResponse.json({ success: true, status })
 }

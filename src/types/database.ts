@@ -41,6 +41,8 @@ export type InsightType = 'positive' | 'negative' | 'neutral' | 'warning'
 
 export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly'
 
+export type ViolationOverrideType = 'false_positive' | 'ignored' | 'fixed'
+
 // ============================================
 // Confidence Level Types (Phase 1)
 // ============================================
@@ -389,6 +391,24 @@ export interface BrokenPage {
   discovered_from: string | null
   attempted_at: string
   created_at: string
+}
+
+// ============================================
+// Violation Override Types
+// ============================================
+
+export interface ViolationOverride {
+  id: string
+  project_id: string
+  rule_id: string
+  element_xpath: string | null
+  element_content_hash: string | null
+  override_type: ViolationOverrideType
+  notes: string | null
+  created_by: string
+  last_seen_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 // ============================================

@@ -23,3 +23,9 @@ export { ScanLogs } from './scan-logs'
 
 // Delete Audit Button - Botao com confirmacao para excluir auditoria
 export { DeleteAuditButton } from './delete-audit-button'
+
+// Classify Modal - Modal para classificar violacoes com IGT opcional
+export { ClassifyModal } from './classify-modal'
+
+// Help Modal - Modal com informacoes educacionais sobre a violacao
+export { HelpModal } from './help-modal'

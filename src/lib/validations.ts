@@ -219,6 +219,65 @@ export const UpdateViolationStatusSchema = z.object({
 
 export type UpdateViolationStatusInput = z.infer<typeof UpdateViolationStatusSchema>
 
+// ============================================
+// Violation Override Schemas
+// ============================================
+
+/**
+ * Types of violation overrides
+ */
+export const ViolationOverrideTypes = ['false_positive', 'ignored', 'fixed'] as const
+export type ViolationOverrideType = typeof ViolationOverrideTypes[number]
+
+/**
+ * Schema for creating/updating a violation override
+ */
+export const CreateViolationOverrideSchema = z.object({
+  // Required: the rule that generated this violation
+  rule_id: z.string().min(1, 'rule_id is required'),
+
+  // Override type
+  override_type: z.enum(ViolationOverrideTypes),
+
+  // Optional: XPath for element-level override (more stable than CSS selector)
+  element_xpath: z.string().max(2000, 'XPath too long').optional().nullable(),
+
+  // Optional: content hash for matching elements with same content
+  element_content_hash: z.string().max(64, 'Hash too long').optional().nullable(),
+
+  // Optional: user notes explaining the override
+  notes: z.string().max(2000, 'Notes too long').optional().nullable(),
+})
+
+export type CreateViolationOverrideInput = z.infer<typeof CreateViolationOverrideSchema>
+
+/**
+ * Schema for querying overrides
+ */
+export const QueryViolationOverridesSchema = z.object({
+  rule_id: z.string().optional(),
+  override_type: z.enum(ViolationOverrideTypes).optional(),
+})
+
+export type QueryViolationOverridesInput = z.infer<typeof QueryViolationOverridesSchema>
+
+// ============================================
+// Route Params Schemas
+// ============================================
+
+/**
+ * Schema para UUID válido (usado em route params)
+ */
+export const UUIDSchema = z.string().uuid('ID inválido')
+
+/**
+ * Valida se uma string é um UUID válido
+ * @returns true se válido, false caso contrário
+ */
+export function isValidUUID(value: string): boolean {
+  return UUIDSchema.safeParse(value).success
+}
+
 /**
  * Helper para validar e retornar erro formatado
  */
