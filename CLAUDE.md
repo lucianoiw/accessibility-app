@@ -39,12 +39,17 @@ src/
 │   │   ├── health/           # Health check endpoint
 │   │   ├── projects/[id]/
 │   │   │   ├── auth/         # Configuracao de autenticacao de sites
+│   │   │   ├── overrides/    # GET overrides de violacoes do projeto
 │   │   │   └── schedule/     # GET/PUT/DELETE configuracao de agendamento
+│   │   ├── violation-overrides/  # POST/PUT/DELETE classificacao de violacoes
 │   │   ├── reports/          # API de relatorios (PDF, etc)
 │   │   └── violations/[id]/  # Sugestoes e verificacao de violacoes
 │   └── auth/                 # Callbacks de autenticacao Supabase
 ├── components/
 │   ├── audit/                # Componentes de auditoria (score-card, charts, etc)
+│   │   ├── classify-modal.tsx  # Modal de classificacao de violacoes (false_positive, ignored, fixed)
+│   │   ├── help-modal.tsx      # Modal de ajuda contextual com passos de correcao
+│   │   └── ...                 # Outros componentes (score-card, charts, etc)
 │   ├── layout/               # Componentes de layout (header, nav, switchers)
 │   ├── reports/              # Componentes de exportacao
 │   ├── ui/                   # Componentes shadcn/ui
@@ -64,6 +69,7 @@ src/
 │   │   ├── custom-rules.ts   # Regras brasileiras customizadas (21 regras base)
 │   │   ├── coga-rules.ts     # Regras COGA de acessibilidade cognitiva (6 regras)
 │   │   ├── rule-labels.ts    # Labels amigaveis em PT-BR
+│   │   ├── rule-knowledge.ts # Base de conhecimento por regra (fix steps, code examples, etc)
 │   │   ├── abnt-map.ts       # Mapeamento WCAG -> ABNT NBR 17060
 │   │   ├── emag-map.ts       # Mapeamento eMAG 3.1 (45 recomendacoes)
 │   │   ├── emag-evaluator.ts # Avaliador de conformidade eMAG
@@ -91,7 +97,7 @@ src/
 │   ├── audit.ts              # Task Trigger.dev com loop iterativo
 │   └── scheduled-audit.ts    # Task agendada (cron) para verificar projetos
 └── types/
-    ├── index.ts              # Tipos compartilhados (inclui BrokenPage, BrokenPageErrorType)
+    ├── index.ts              # Tipos compartilhados (BrokenPage, ViolationOverride, ViolationOverrideType, etc)
     └── database.ts           # Tipos gerados do Supabase
 ```
 
@@ -225,7 +231,7 @@ yarn test:coverage # Rodar testes com cobertura
 - **React Testing**: @testing-library/react + @testing-library/user-event
 - **Mocking**: vi.mock, vi.hoisted (para mocks hoisted)
 
-### Cobertura Atual (~850 testes em 46 arquivos)
+### Cobertura Atual (~965 testes em 49 arquivos)
 
 | Area | Statements | Linhas |
 |------|-----------|--------|
@@ -247,6 +253,8 @@ __tests__/
 │   │   │   └── trend-indicator.test.tsx
 │   │   ├── evolution/      # Componentes de evolucao
 │   │   │   └── period-selector.test.tsx
+│   │   ├── classify-modal.test.tsx   # Modal de classificacao de violacoes
+│   │   ├── help-modal.test.tsx       # Modal de ajuda contextual
 │   │   ├── scan-logs.test.tsx
 │   │   ├── score-card.test.tsx
 │   │   └── score-modal.test.tsx
@@ -282,6 +290,7 @@ __tests__/
 │   │   ├── emag-map.test.ts
 │   │   ├── health.test.ts
 │   │   ├── parallel.test.ts
+│   │   ├── rule-knowledge.test.ts  # Base de conhecimento por regra
 │   │   └── rule-labels.test.ts
 │   ├── reports/
 │   │   ├── data-builder.test.ts   # generateReportFileName
@@ -501,6 +510,61 @@ Sistema de agendamento automatico de auditorias usando Trigger.dev scheduled tas
 - [x] Status de violacao (open, fixed, ignored, false_positive)
 - [x] Metrica "paginas com violacoes" no resumo da auditoria
 
+### Classificacao de Violacoes (Violation Overrides)
+
+Sistema unificado para classificar violacoes como falsos positivos, ignoradas ou corrigidas. Substitui o antigo sistema IGT (Intelligent Guided Tests) com uma abordagem mais simples e persistente.
+
+**Backend:**
+- [x] Tabela `violation_overrides` com campos:
+  - `project_id` - Projeto associado
+  - `rule_id` - Regra da violacao
+  - `element_xpath` - XPath do elemento (nullable)
+  - `element_content_hash` - Hash do conteudo (nullable)
+  - `override_type` - Tipo: `false_positive`, `ignored`, `fixed`
+  - `notes` - Notas do usuario
+  - `created_by` - Usuario que criou
+- [x] Unique index com COALESCE para NULLs
+- [x] API `POST/PUT/DELETE /api/violation-overrides` com CSRF
+- [x] API `GET /api/projects/[id]/overrides` para listar overrides
+- [x] Verificacao de ownership em todas as operacoes
+- [x] Pattern check-then-insert para lidar com index COALESCE
+
+**Frontend:**
+- [x] `ClassifyModal` - Modal com fluxo guiado ou decisao direta
+- [x] `HelpModal` - Modal educativo com passos de correcao e exemplos
+- [x] Perguntas guiadas baseadas em `rule-knowledge.ts`
+- [x] Sugestao automatica baseada em respostas
+- [x] Badge visual no card de violacao quando classificada
+- [x] Filtro por status considera override (funcao `getEffectiveStatus`)
+- [x] Traducoes completas (pt-BR, en, es) - namespaces ClassifyModal, HelpModal
+
+**Base de conhecimento (`rule-knowledge.ts`):**
+- [x] Explicacao "por que importa" por regra
+- [x] Usuarios afetados (screenReader, lowVision, cognitive, motor, etc)
+- [x] Passos de correcao (fix steps)
+- [x] Exemplos de codigo (before/after)
+- [x] Perguntas de avaliacao para fluxo guiado
+- [x] Orientacao sobre falsos positivos
+
+**Arquivos principais:**
+- `supabase/migrations/00020_add_violation_overrides.sql` - Schema
+- `supabase/migrations/00021_drop_igt_tables.sql` - Remove tabelas IGT antigas
+- `src/app/api/violation-overrides/route.ts` - API CRUD
+- `src/app/api/projects/[id]/overrides/route.ts` - Lista overrides
+- `src/components/audit/classify-modal.tsx` - Modal de classificacao
+- `src/components/audit/help-modal.tsx` - Modal de ajuda
+- `src/lib/audit/rule-knowledge.ts` - Base de conhecimento
+
+**Fluxo de uso:**
+1. Usuario clica "Classificar" no card de violacao
+2. Escolhe entre "Preciso de ajuda" (fluxo guiado) ou "Ja sei" (decisao direta)
+3. Se guiado: responde perguntas contextuais, recebe sugestao
+4. Seleciona classificacao: Falso Positivo, Ignorar ou Corrigido
+5. Adiciona notas opcionais
+6. Override persiste entre auditorias (vinculado ao projeto, nao a auditoria)
+
+**Diferencial:** Overrides sao por projeto, nao por auditoria. Isso significa que uma vez marcada como falso positivo, a violacao permanece classificada em auditorias futuras ate que o usuario mude.
+
 ### Sugestoes com IA
 
 - [x] Gerar sugestoes de codigo corrigido (Claude API)
@@ -616,7 +680,7 @@ Sistema para classificar violacoes por nivel de certeza, reduzindo falsos positi
 - [x] Client Components com `useTranslations()`
 - [x] Link e useRouter tipados via `@/i18n/navigation`
 
-**Namespaces de traducao (44 namespaces):**
+**Namespaces de traducao (46 namespaces):**
 
 | Namespace | Descricao |
 |-----------|-----------|
@@ -665,6 +729,8 @@ Sistema para classificar violacoes por nivel de certeza, reduzindo falsos positi
 | `Metadata` | Metadados da aplicacao |
 | `ScheduleSettings` | Configuracao de agendamento de auditorias |
 | `DaysOfWeek` | Dias da semana para agendamento |
+| `ClassifyModal` | Modal de classificacao de violacoes |
+| `HelpModal` | Modal de ajuda contextual para violacoes |
 
 ### Dashboard de Saude da Acessibilidade
 
@@ -876,10 +942,12 @@ Empresas querem relatorios com sua marca.
   - Instrucoes passo-a-passo
   - Screenshots de referencia
   - Status: Pass/Fail/N/A
-- [ ] **Intelligent Guided Tests** (inspirado em Deque)
-  - Fluxo guiado por tipo de teste
-  - Perguntas simples (sim/nao)
-  - Resultado automatico baseado em respostas
+- [x] **Classificacao de Violacoes** (substitui IGT) ✅ IMPLEMENTADO
+  - Fluxo guiado ou decisao direta
+  - Perguntas contextuais por regra
+  - Sugestao automatica baseada em respostas
+  - Persistencia por projeto (nao por auditoria)
+  - Modal de ajuda com exemplos de codigo
 - [ ] **Gravacao de evidencias**
   - Captura de tela durante teste
   - Anotacoes visuais
