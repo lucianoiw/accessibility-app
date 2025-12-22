@@ -5,44 +5,128 @@ import type { AuthConfig } from '@/types'
 // Termos que indicam que a página ainda está carregando
 const LOADING_INDICATORS = ['carregando', 'loading', 'aguarde', 'please wait']
 
+// Tipos de request que indicam carregamento de SPA
+const SPA_REQUEST_TYPES = ['xhr', 'fetch', 'document'] as const
+
+interface RequestTracker {
+  getPendingCount: () => number
+  getPendingUrls: () => string[]
+  cleanup: () => void
+}
+
 /**
- * Espera a página estabilizar
+ * Cria um tracker de requisições para detectar quando SPA terminou de carregar
+ * IMPORTANTE: Criar ANTES do goto() para capturar todas as requisições
  */
-async function waitForPageStable(page: Page, options: { maxWait?: number } = {}): Promise<void> {
-  const { maxWait = 10000 } = options
+function createRequestTracker(page: Page): RequestTracker {
+  const pendingRequests = new Map<string, string>()
+
+  const onRequest = (request: { url: () => string; resourceType: () => string }) => {
+    const type = request.resourceType()
+    if (SPA_REQUEST_TYPES.includes(type as typeof SPA_REQUEST_TYPES[number])) {
+      pendingRequests.set(request.url(), type)
+    }
+  }
+
+  const onResponse = (response: { url: () => string }) => {
+    pendingRequests.delete(response.url())
+  }
+
+  const onRequestFailed = (request: { url: () => string }) => {
+    pendingRequests.delete(request.url())
+  }
+
+  page.on('request', onRequest)
+  page.on('response', onResponse)
+  page.on('requestfailed', onRequestFailed)
+
+  return {
+    getPendingCount: () => pendingRequests.size,
+    getPendingUrls: () => Array.from(pendingRequests.keys()),
+    cleanup: () => {
+      page.off('request', onRequest)
+      page.off('response', onResponse)
+      page.off('requestfailed', onRequestFailed)
+      pendingRequests.clear()
+    },
+  }
+}
+
+/**
+ * Espera a página estabilizar (versão robusta com request tracking)
+ * Alinhado com a implementação do auditor.ts
+ */
+async function waitForPageStable(
+  page: Page,
+  requestTracker: RequestTracker,
+  options: { maxWait?: number } = {}
+): Promise<void> {
+  const { maxWait = 30000 } = options // 30s timeout (aumentado de 10s)
   const checkInterval = 300
   const stableChecksNeeded = 3
 
   const startTime = Date.now()
   let lastElementCount = 0
+  let lastContentLength = 0
   let stableCount = 0
+  let networkIdleCount = 0
 
   while (Date.now() - startTime < maxWait) {
     const state = await page.evaluate(() => ({
       elements: document.querySelectorAll('*').length,
+      contentLength: document.body?.innerText?.length || 0,
       title: document.title,
     }))
+
+    const pendingRequests = requestTracker.getPendingCount()
 
     // Verificar se título indica loading
     const isLoading = LOADING_INDICATORS.some(t => state.title.toLowerCase().includes(t))
     if (isLoading) {
       stableCount = 0
+      networkIdleCount = 0
       await page.waitForTimeout(checkInterval)
       continue
     }
 
-    // Verificar se DOM estabilizou
-    if (state.elements === lastElementCount) {
+    // Verificar network idle
+    if (pendingRequests === 0) {
+      networkIdleCount++
+    } else {
+      networkIdleCount = 0
+    }
+
+    // Verificar se DOM estabilizou (elementos E conteúdo)
+    const domStable = state.elements === lastElementCount &&
+      state.contentLength === lastContentLength
+
+    if (domStable) {
       stableCount++
-      if (stableCount >= stableChecksNeeded) {
-        return
-      }
     } else {
       stableCount = 0
       lastElementCount = state.elements
+      lastContentLength = state.contentLength
+    }
+
+    // Página pronta quando:
+    // - Network idle por 2+ checks (600ms) E DOM estável por 3+ checks
+    // - OU DOM muito estável por 6+ checks (1.8s) mesmo com network ativa (para WebSockets/polling)
+    const isReady = (networkIdleCount >= 2 && stableCount >= stableChecksNeeded) ||
+      stableCount >= 6
+
+    if (isReady) {
+      console.log(`[Auth Test] Page stable after ${Date.now() - startTime}ms (network idle: ${networkIdleCount}, dom stable: ${stableCount})`)
+      return
     }
 
     await page.waitForTimeout(checkInterval)
+  }
+
+  // Timeout - logar estado final
+  const pendingUrls = requestTracker.getPendingUrls()
+  console.log(`[Auth Test] Page stability timeout after ${maxWait}ms (pending requests: ${pendingUrls.length})`)
+  if (pendingUrls.length > 0) {
+    console.log(`[Auth Test] Pending URLs: ${pendingUrls.slice(0, 5).join(', ')}${pendingUrls.length > 5 ? '...' : ''}`)
   }
 }
 
@@ -90,17 +174,26 @@ export const testAuthTask = task({
     }
 
     let browser = null
+    let requestTracker: RequestTracker | null = null
 
     try {
       console.log(`[Auth Test] Testing connection to ${baseUrl}`)
       console.log(`[Auth Test] Using auth: ${authConfig?.type || 'none'}`)
 
       // Usar Playwright para abrir o site com os headers
-      browser = await chromium.launch({ headless: true })
+      // Args anti-detecção (alinhado com auditor.ts)
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          '--disable-blink-features=AutomationControlled',
+          '--disable-features=IsolateOrigins,site-per-process',
+        ],
+      })
       const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         extraHTTPHeaders,
         viewport: { width: 1280, height: 720 },
+        bypassCSP: true, // Alinhado com auditor.ts
       })
 
       // Injetar cookies se configurado
@@ -142,6 +235,9 @@ export const testAuthTask = task({
 
       const page = await context.newPage()
 
+      // IMPORTANTE: Criar tracker ANTES do goto() para capturar todas as requisições do SPA
+      requestTracker = createRequestTracker(page)
+
       // Capturar o status da resposta
       let responseStatus = 0
       page.on('response', (response) => {
@@ -156,8 +252,8 @@ export const testAuthTask = task({
         waitUntil: 'domcontentloaded'
       })
 
-      // Esperar página estabilizar (adapta ao tempo real de carregamento)
-      await waitForPageStable(page, { maxWait: 10000 })
+      // Esperar página estabilizar (versão robusta com network tracking)
+      await waitForPageStable(page, requestTracker, { maxWait: 30000 })
 
       // Pegar URL final (após redirects)
       const finalUrl = page.url()
@@ -236,7 +332,10 @@ export const testAuthTask = task({
         message: errorMessage,
       }
     } finally {
-      // SEMPRE fecha o browser, mesmo com erro
+      // SEMPRE limpar listeners e fechar browser, mesmo com erro
+      if (requestTracker) {
+        requestTracker.cleanup()
+      }
       if (browser) {
         await browser.close().catch(err => console.error('[Auth Test] Error closing browser:', err))
       }
