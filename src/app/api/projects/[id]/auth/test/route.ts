@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import type { Project, AuthConfig } from '@/types'
 import { AuthConfigSchema, validateInput } from '@/lib/validations'
 import { requireCsrfValid } from '@/lib/csrf'
-import { testAuthTask } from '@/trigger/test-auth'
+import { tasks, runs } from '@trigger.dev/sdk/v3'
+import type { testAuthTask } from '@/trigger/test-auth'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -63,13 +64,20 @@ export async function POST(request: Request, { params }: Props) {
     console.log(`[Auth Test] Using auth: ${authConfig?.type || 'none'}`)
 
     // Executar teste via Trigger.dev (onde Playwright está disponível)
-    const result = await testAuthTask.triggerAndWait({
-      baseUrl: project.base_url,
-      authConfig,
-    })
+    // Usar trigger + poll pois triggerAndWait só funciona dentro de tasks
+    const handle = await tasks.trigger<typeof testAuthTask>(
+      'test-auth',
+      {
+        baseUrl: project.base_url,
+        authConfig,
+      }
+    )
 
-    if (!result.ok) {
-      console.error('[Auth Test] Task failed:', result.error)
+    // Aguardar conclusão do task (poll a cada 500ms, timeout de 60s)
+    const run = await runs.poll(handle.id, { pollIntervalMs: 500 })
+
+    if (run.status !== 'COMPLETED') {
+      console.error('[Auth Test] Task failed:', run.status)
       return NextResponse.json({
         success: false,
         statusCode: 0,
@@ -79,7 +87,7 @@ export async function POST(request: Request, { params }: Props) {
       })
     }
 
-    return NextResponse.json(result.output)
+    return NextResponse.json(run.output)
   } catch (error) {
     // Sanitize error - não expor detalhes internos
     const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar'
