@@ -112,15 +112,11 @@ export const testAuthTask = task({
         const parsedUrl = new URL(baseUrl)
         const isSecure = parsedUrl.protocol === 'https:'
 
-        // Usar domínio com ponto na frente para funcionar em subdomínios
-        // Ex: .melver.com.br funciona para nasescolas.melver.com.br
-        const hostParts = parsedUrl.hostname.split('.')
-        // Se tem mais de 2 partes (ex: nasescolas.melver.com.br), usar domínio pai
-        cookieDomain = hostParts.length > 2
-          ? '.' + hostParts.slice(-3).join('.') // .melver.com.br
-          : parsedUrl.hostname
+        // Usar domínio exato do hostname (mais compatível)
+        // Alguns sites não aceitam cookies de domínio pai
+        cookieDomain = parsedUrl.hostname
 
-        console.log(`[Auth Test] Cookie domain: ${cookieDomain} (from ${parsedUrl.hostname})`)
+        console.log(`[Auth Test] Cookie domain: ${cookieDomain}`)
 
         const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
         const cookiesToSet = cookiePairs.map(pair => {
