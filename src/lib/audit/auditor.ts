@@ -7,6 +7,8 @@ import { ABNT_MAP } from './abnt-map'
 import { extractLinksFromPage, type SubdomainConfig } from './crawler'
 import { calculateConfidence, isExperimentalRule, type ElementContext } from './confidence'
 import { filterFalsePositives } from './false-positive-filters'
+import { isVisualRule } from './screenshot-rules'
+import { captureScreenshotForRule, type ScreenshotResult } from './screenshot'
 
 // Termos que indicam que a página ainda está carregando
 const LOADING_INDICATORS = [
@@ -207,6 +209,7 @@ export interface AuditResult {
   errorType?: BrokenPageErrorType  // Tipo de erro para broken pages
   httpStatus?: number              // Status HTTP (para http_error)
   discoveredLinks?: string[]       // Links descobertos durante auditoria
+  visualScreenshots?: Map<string, ScreenshotResult>  // Screenshots de regras visuais (1 por regra)
 }
 
 export interface ViolationResult {
@@ -654,6 +657,57 @@ export async function auditPage(
       }
     })
 
+    // Capturar screenshots de violações visuais (1 por regra, do primeiro elemento)
+    // O primeiro elemento será o mesmo mostrado no card de violação
+    const visualScreenshots = new Map<string, ScreenshotResult>()
+
+    // Agrupar violações por regra para pegar apenas o primeiro de cada
+    const violationsByRule = new Map<string, ViolationResult>()
+    for (const v of enrichedViolations) {
+      if (!violationsByRule.has(v.ruleId)) {
+        violationsByRule.set(v.ruleId, v)
+      }
+    }
+
+    // Timeout total para captura de screenshots (previne race condition com browser.close)
+    const SCREENSHOT_TIMEOUT_MS = 15000 // 15 segundos total para todos os screenshots
+    const screenshotStartTime = Date.now()
+
+    // Capturar screenshot apenas de regras visuais
+    for (const [ruleId, violation] of violationsByRule) {
+      if (isVisualRule(ruleId)) {
+        // Verificar timeout antes de tentar captura
+        const elapsed = Date.now() - screenshotStartTime
+        if (elapsed > SCREENSHOT_TIMEOUT_MS) {
+          console.warn(`[Auditor] Screenshot timeout reached (${elapsed}ms), skipping remaining rules`)
+          break
+        }
+
+        // Verificar se browser ainda está conectado (previne race condition)
+        if (!browser.isConnected()) {
+          console.warn(`[Auditor] Browser disconnected, stopping screenshot capture`)
+          break
+        }
+
+        try {
+          // Usar XPath se disponível (mais estável), senão selector CSS
+          const selectorToUse = violation.xpath || violation.selector
+          const result = await captureScreenshotForRule(page, selectorToUse, ruleId)
+
+          if (result) {
+            visualScreenshots.set(ruleId, result)
+            console.log(`[Auditor] Screenshot captured for ${ruleId} (${result.width}x${result.height})`)
+          }
+        } catch (screenshotError) {
+          console.warn(`[Auditor] Failed to capture screenshot for ${ruleId}:`, screenshotError)
+        }
+      }
+    }
+
+    if (visualScreenshots.size > 0) {
+      console.log(`[Auditor] Captured ${visualScreenshots.size} visual screenshots`)
+    }
+
     await browser.close()
 
     console.log(`[Auditor] Total violations for ${url}: ${enrichedViolations.length} (${violations.length - enrichedViolations.length} filtered)`)
@@ -663,6 +717,7 @@ export async function auditPage(
       loadTime,
       screenshot,
       discoveredLinks,
+      visualScreenshots,
     }
   } catch (error) {
     if (browser) {
@@ -956,8 +1011,9 @@ export function aggregateViolations(
       violation: data.violation,
       occurrences: data.occurrences,
       pageUrls: data.pageUrls,
+      // Manter ordem de descoberta (primeiro encontrado = primeiro na lista)
+      // Isso garante que o screenshot automático corresponda ao elemento mostrado no card
       uniqueElements: Array.from(data.uniqueElements.values())
-        .sort((a, b) => b.count - a.count) // Ordenar por frequência
         .slice(0, 20), // Limitar a 20 elementos únicos
     })
   }

@@ -14,6 +14,7 @@ import {
 import { AXE_TO_EMAG, CUSTOM_TO_EMAG } from '@/lib/audit/emag-map'
 import { calculateAccessibilityScore, calculateRulesFromAudit } from '@/lib/audit/score-calculator'
 import { calculateSeverityPatternSummary } from '@/lib/audit/pattern-grouping'
+import { uploadScreenshot, type ScreenshotResult } from '@/lib/audit/screenshot'
 import type {
   AuditSummary,
   ImpactLevel,
@@ -85,6 +86,7 @@ interface BatchResult {
   auditPageId?: string
   violations?: ViolationResult[]
   discoveredLinks?: string[]
+  visualScreenshots?: Map<string, ScreenshotResult>
 }
 
 // Extensões de arquivos não-HTML
@@ -281,6 +283,9 @@ export const runAuditTask = task({
     // Coletar todas as violações para agregação
     const allViolations: Array<{ pageUrl: string; violations: ViolationResult[] }> = []
 
+    // Coletar screenshots de violações visuais (1 por regra, primeiro encontrado)
+    const collectedScreenshots = new Map<string, ScreenshotResult>()
+
     // Loop principal
     while (
       state.successfulAudits < maxPages &&
@@ -459,6 +464,7 @@ export const runAuditTask = task({
               url,
               violations: result.violations.length,
               linksDiscovered: result.discoveredLinks?.length || 0,
+              visualScreenshots: result.visualScreenshots?.size || 0,
             })
 
             return {
@@ -466,6 +472,7 @@ export const runAuditTask = task({
               success: true,
               violations: result.violations,
               discoveredLinks: result.discoveredLinks || [],
+              visualScreenshots: result.visualScreenshots,
               pageId,
               auditPageId,
             }
@@ -535,6 +542,17 @@ export const runAuditTask = task({
               pageUrl: result.url,
               violations: result.violations,
             })
+          }
+
+          // Coletar screenshots de violações visuais (apenas o primeiro de cada regra)
+          if (result.visualScreenshots && result.visualScreenshots.size > 0) {
+            for (const [ruleId, screenshot] of result.visualScreenshots) {
+              // Apenas coletar se ainda não temos screenshot desta regra
+              if (!collectedScreenshots.has(ruleId)) {
+                collectedScreenshots.set(ruleId, screenshot)
+                logger.info('Screenshot coletado', { ruleId, size: screenshot.buffer.length })
+              }
+            }
           }
 
           // Adicionar links descobertos como candidatos
@@ -747,6 +765,76 @@ export const runAuditTask = task({
     }
 
     logger.info('Violações agregadas inseridas', { count: violationsToInsert.length })
+
+    // ========================================
+    // STEP 4.5: Upload de screenshots de violações visuais
+    // ========================================
+    if (collectedScreenshots.size > 0) {
+      logger.info('Step 4.5: Fazendo upload de screenshots', { count: collectedScreenshots.size })
+
+      // Buscar IDs das violações agregadas que têm screenshots
+      const ruleIdsWithScreenshots = Array.from(collectedScreenshots.keys())
+      const { data: violationsWithScreenshots } = await supabase
+        .from('aggregated_violations')
+        .select('id, rule_id')
+        .eq('audit_id', auditId)
+        .in('rule_id', ruleIdsWithScreenshots)
+
+      let successfulUploads = 0
+
+      if (violationsWithScreenshots && violationsWithScreenshots.length > 0) {
+        // Fazer upload e atualizar cada violação
+        for (const violation of violationsWithScreenshots) {
+          const viol = violation as { id: string; rule_id: string }
+          const screenshot = collectedScreenshots.get(viol.rule_id)
+
+          if (screenshot) {
+            try {
+              const screenshotUrl = await uploadScreenshot(
+                supabase,
+                auditId,
+                viol.id,
+                screenshot.buffer
+              )
+
+              // Atualizar violação com URL do screenshot
+              await supabase
+                .from('aggregated_violations')
+                .update({ screenshot_url: screenshotUrl } as never)
+                .eq('id', viol.id)
+
+              logger.info('Screenshot uploaded', {
+                violationId: viol.id,
+                ruleId: viol.rule_id,
+                url: screenshotUrl,
+              })
+
+              successfulUploads++
+
+              // SEGURANÇA: Liberar buffer após upload bem-sucedido (previne memory leak)
+              collectedScreenshots.delete(viol.rule_id)
+
+            } catch (uploadError) {
+              logger.warn('Erro ao fazer upload de screenshot', {
+                violationId: viol.id,
+                ruleId: viol.rule_id,
+                error: String(uploadError),
+              })
+              // SEGURANÇA: Liberar buffer mesmo em caso de erro (não vamos retry)
+              collectedScreenshots.delete(viol.rule_id)
+            }
+          }
+        }
+      }
+
+      logger.info('Upload de screenshots concluído', {
+        attempted: ruleIdsWithScreenshots.length,
+        successful: successfulUploads,
+      })
+
+      // SEGURANÇA: Limpar todos os buffers restantes (garantia final)
+      collectedScreenshots.clear()
+    }
 
     // Calcular summary de ocorrências
     const summary: AuditSummary = {

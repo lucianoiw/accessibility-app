@@ -29,3 +29,7 @@ export { ClassifyModal } from './classify-modal'
 
 // Help Modal - Modal com informacoes educacionais sobre a violacao
 export { HelpModal } from './help-modal'
+
+// Screenshot Components - Captura e visualizacao de screenshots de violacoes
+export { ScreenshotButton } from './screenshot-button'
+export { ScreenshotModal } from './screenshot-modal'

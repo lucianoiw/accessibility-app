@@ -364,6 +364,8 @@ export interface AggregatedViolation {
   confidence_reason: ReviewReason | null
   confidence_signals: ConfidenceSignal[] | null
   is_experimental: boolean           // Flag for experimental rules
+  // Screenshot do elemento
+  screenshot_url: string | null      // URL do screenshot no Supabase Storage
   created_at: string
   updated_at: string
 }

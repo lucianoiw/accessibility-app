@@ -922,7 +922,15 @@
     "pagesAffectedTitle": "Paginas Afectadas",
     "occurrencesLabel": "ocurrencias",
     "pagesAffectedLabel": "paginas",
-    "viewMoreElements": "Ver {count} mas elementos afectados"
+    "viewMoreElements": "Ver {count} mas elementos afectados",
+    "screenshot": "Captura de pantalla",
+    "captureScreenshot": "Capturar pantalla",
+    "screenshotLoading": "Capturando...",
+    "screenshotError": "Error al capturar pantalla",
+    "viewScreenshot": "Ver captura",
+    "screenshotOf": "Captura de {rule}",
+    "screenshotReset": "Restablecer zoom",
+    "screenshotDownload": "Descargar"
   },
   "WcagPartial": {
     "inputSemAutocomplete": {

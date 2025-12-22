@@ -20,8 +20,8 @@ import { getRuleLabel } from '@/lib/audit/rule-labels'
 import { VerifyButton } from './verify-button'
 import { SuggestButton } from './suggest-button'
 import { ConfidenceBadge } from '@/components/audit/confidence-badge'
-import { ClassifyModal, HelpModal } from '@/components/audit'
-import { Copy, Check, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, HelpCircle, FlaskConical, AlertTriangle, Code, Link as LinkIcon, Hash } from 'lucide-react'
+import { ClassifyModal, HelpModal, ScreenshotButton } from '@/components/audit'
+import { Copy, Check, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, HelpCircle, FlaskConical, AlertTriangle, Code, Link as LinkIcon, Hash, Camera } from 'lucide-react'
 
 interface Props {
   violations: AggregatedViolation[]
@@ -925,6 +925,12 @@ function ViolationCard({ violation, selectorMode, t, impactLabels, override, pro
                 {t('overrideStillDetected')}
               </span>
             )}
+            {/* Screenshot indicator */}
+            {violation.screenshot_url && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border border-sky-200 dark:border-sky-700/50" title={t('viewScreenshot')}>
+                <Camera className="h-3 w-3" />
+              </span>
+            )}
           </div>
 
           {/* Description */}
@@ -1086,6 +1092,12 @@ function ViolationCard({ violation, selectorMode, t, impactLabels, override, pro
 
               {/* Sidebar - 1 column */}
               <div className="flex flex-col gap-6 pl-0 lg:pl-4 lg:border-l">
+                {/* Screenshot */}
+                <div>
+                  <h4 className="text-sm font-bold mb-3">{t('screenshot')}</h4>
+                  <ScreenshotButton violation={violation} />
+                </div>
+
                 {/* Affected Pages */}
                 <div>
                   <h4 className="text-sm font-bold mb-3 flex items-center gap-2">

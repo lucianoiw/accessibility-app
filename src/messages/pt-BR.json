@@ -906,7 +906,15 @@
     "pagesAffectedTitle": "Paginas Afetadas",
     "occurrencesLabel": "ocorrencias",
     "pagesAffectedLabel": "paginas",
-    "viewMoreElements": "Ver mais {count} elementos afetados"
+    "viewMoreElements": "Ver mais {count} elementos afetados",
+    "screenshot": "Screenshot",
+    "captureScreenshot": "Capturar Screenshot",
+    "screenshotLoading": "Capturando...",
+    "screenshotError": "Erro ao capturar screenshot",
+    "viewScreenshot": "Ver screenshot",
+    "screenshotOf": "Screenshot de {rule}",
+    "screenshotReset": "Resetar zoom",
+    "screenshotDownload": "Baixar"
   },
   "AuditComparison": {
     "title": "Comparacao de Auditorias",

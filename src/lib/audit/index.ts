@@ -94,3 +94,23 @@ export {
   createScanLogEntries,
   type ScanLogEntry,
 } from './scan-logs'
+
+// Screenshot
+export {
+  captureElementScreenshot,
+  captureScreenshotForRule,
+  uploadScreenshot,
+  captureAndUploadScreenshot,
+  deleteAuditScreenshots,
+  type ScreenshotResult,
+  type CaptureOptions,
+} from './screenshot'
+
+export {
+  isVisualRule,
+  getScreenshotConfig,
+  VISUAL_RULES,
+  AXE_VISUAL_RULES,
+  CUSTOM_VISUAL_RULES,
+  type VisualRule,
+} from './screenshot-rules'
