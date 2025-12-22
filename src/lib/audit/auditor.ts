@@ -415,6 +415,38 @@ export async function auditPage(
       }
     }
 
+    // Verificar se foi redirecionado para página de login (auth falhou)
+    const finalUrl = page.url()
+    const wasRedirected = finalUrl !== url && new URL(finalUrl).pathname !== new URL(url).pathname
+
+    if (wasRedirected) {
+      // Verificar se a URL final indica login
+      const loginUrlIndicators = ['/login', '/signin', '/sign-in', '/auth', '/entrar', '/acesso']
+      const isLoginUrl = loginUrlIndicators.some(indicator =>
+        finalUrl.toLowerCase().includes(indicator)
+      )
+
+      // Verificar se o conteúdo da página indica login
+      const pageContent = await page.content()
+      const loginContentIndicators = ['login', 'signin', 'sign in', 'password', 'senha', 'entrar', 'autenticar']
+      const hasLoginContent = loginContentIndicators.some(indicator =>
+        pageContent.toLowerCase().includes(indicator)
+      )
+
+      if (isLoginUrl || hasLoginContent) {
+        console.error(`[Auditor] Redirected to login page: ${url} -> ${finalUrl}`)
+        await browser.close()
+        return {
+          url,
+          violations: [],
+          loadTime,
+          error: `Redirecionado para login (${finalUrl}). A autenticação pode não estar funcionando.`,
+          errorType: 'http_error',
+          httpStatus: 302,
+        }
+      }
+    }
+
     // Configurar tags WCAG para axe
     const wcagTags = buildWcagTags(wcagLevels)
 

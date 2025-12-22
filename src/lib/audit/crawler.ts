@@ -397,6 +397,22 @@ export async function crawlWebsite(
           // Usa o tracker que foi criado ANTES do goto()
           await waitForPageStable(page, requestTracker)
 
+          // Verificar se foi redirecionado para página de login (auth falhou)
+          const wasRedirected = finalUrl !== normalizedUrl && new URL(finalUrl).pathname !== new URL(normalizedUrl).pathname
+
+          if (wasRedirected) {
+            // Verificar se a URL final indica login
+            const loginUrlIndicators = ['/login', '/signin', '/sign-in', '/auth', '/entrar', '/acesso']
+            const isLoginUrl = loginUrlIndicators.some(indicator =>
+              finalUrl.toLowerCase().includes(indicator)
+            )
+
+            if (isLoginUrl) {
+              console.warn(`[Crawler] Redirecionado para login: ${normalizedUrl} -> ${finalUrl} (ignorando)`)
+              continue // Pular esta página, não adicionar aos descobertos
+            }
+          }
+
           // Adicionar à lista de descobertos
           if (!discovered.includes(normalizedUrl)) {
             discovered.push(normalizedUrl)
@@ -838,6 +854,22 @@ export async function discoverInitialUrls(
         // Esperar página estabilizar (mesmo com erro, pode ter conteúdo)
         await waitForPageStable(page, requestTracker, { maxWait: 30000 })
 
+        // Verificar se foi redirecionado para página de login
+        const finalUrl = page.url()
+        const wasRedirected = finalUrl !== normalizedUrl && new URL(finalUrl).pathname !== new URL(normalizedUrl).pathname
+
+        if (wasRedirected) {
+          const loginUrlIndicators = ['/login', '/signin', '/sign-in', '/auth', '/entrar', '/acesso']
+          const isLoginUrl = loginUrlIndicators.some(indicator =>
+            finalUrl.toLowerCase().includes(indicator)
+          )
+
+          if (isLoginUrl) {
+            console.warn(`[Discovery] Redirecionado para login: ${normalizedUrl} -> ${finalUrl} (ignorando)`)
+            continue // Pular esta página
+          }
+        }
+
         // Se página com erro, não adicionar à lista mas ainda extrair links
         const isErrorPage = status >= 400
         if (isErrorPage) {
@@ -1162,6 +1194,22 @@ export async function discoverWithPathScope(
 
         // Esperar página estabilizar (mesmo com erro, pode ter conteúdo)
         await waitForPageStable(page, requestTracker, { maxWait: 30000 })
+
+        // Verificar se foi redirecionado para página de login
+        const finalUrl = page.url()
+        const wasRedirected = finalUrl !== normalizedUrl && new URL(finalUrl).pathname !== new URL(normalizedUrl).pathname
+
+        if (wasRedirected) {
+          const loginUrlIndicators = ['/login', '/signin', '/sign-in', '/auth', '/entrar', '/acesso']
+          const isLoginUrl = loginUrlIndicators.some(indicator =>
+            finalUrl.toLowerCase().includes(indicator)
+          )
+
+          if (isLoginUrl) {
+            console.warn(`[PathScopedCrawl] Redirecionado para login: ${normalizedUrl} -> ${finalUrl} (ignorando)`)
+            continue // Pular esta página
+          }
+        }
 
         // Se página com erro, não adicionar à lista mas ainda extrair links
         const isErrorPage = status >= 400
