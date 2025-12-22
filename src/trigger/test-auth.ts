@@ -282,9 +282,16 @@ export const testAuthTask = task({
       const pageTitle = await page.title()
 
       const statusCode = response?.status() || responseStatus
-      const success = statusCode >= 200 && statusCode < 400
 
-      console.log(`[Auth Test] Result: status=${statusCode}, success=${success}, redirected=${wasRedirected}, hasLogin=${hasLoginForm}`)
+      // Determinar sucesso baseado em múltiplos fatores:
+      // 1. Status HTTP 2xx/3xx é sempre sucesso
+      // 2. Status 4xx/5xx pode ser sucesso SE a página carregou conteúdo e NÃO tem formulário de login
+      //    (alguns sites como MELVER retornam 404 mesmo quando logado e funcionando)
+      const httpSuccess = statusCode >= 200 && statusCode < 400
+      const contentLoaded = !hasLoginForm && !wasRedirected
+      const success = httpSuccess || contentLoaded
+
+      console.log(`[Auth Test] Result: status=${statusCode}, httpSuccess=${httpSuccess}, contentLoaded=${contentLoaded}, success=${success}, redirected=${wasRedirected}, hasLogin=${hasLoginForm}`)
       console.log(`[Auth Test] Final URL: ${finalUrl}`)
       console.log(`[Auth Test] Page title: ${pageTitle}`)
 
@@ -306,13 +313,15 @@ export const testAuthTask = task({
             ? 'Redirecionado para página de login. A autenticação pode não estar funcionando.'
             : hasLoginForm
               ? 'Página carregou mas parece ter formulário de login.'
-              : 'Conexão bem sucedida!'
+              : !httpSuccess
+                ? `Conexão bem sucedida! (Status ${statusCode} ignorado - conteúdo carregou)`
+                : 'Conexão bem sucedida!'
           : statusCode === 401
             ? 'Não autorizado (401). Verifique o token.'
             : statusCode === 403
               ? 'Acesso negado (403). O token pode não ter permissão.'
-              : statusCode === 404
-                ? 'Página não encontrada (404). Verifique se a URL base está correta.'
+              : hasLoginForm
+                ? 'Redirecionado para página de login. A autenticação não funcionou.'
                 : `Erro: ${statusCode}`,
         debug: {
           cookieNames,
