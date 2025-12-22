@@ -170,15 +170,14 @@ export const checkScheduledAudits = schedules.task({
           .update({ trigger_run_id: handle.id })
           .eq('id', audit.id)
 
-        // Atualizar timestamps de agendamento do projeto
+        // Atualizar last_scheduled_audit_at
         // O trigger do banco vai recalcular next_scheduled_audit_at automaticamente
+        // (trigger dispara quando last_scheduled_audit_at muda - migration 00022)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
           .from('projects')
           .update({
             last_scheduled_audit_at: new Date().toISOString(),
-            // Forçar recálculo do próximo agendamento
-            schedule_enabled: project.schedule_enabled,
           })
           .eq('id', project.id)
 

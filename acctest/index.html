@@ -1,473 +1,964 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste de Regras - Confidence Levels</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste de Regras - Confidence Levels</title>
 
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem;
-      line-height: 1.6;
-    }
-    h1 { color: #1a1a1a; border-bottom: 2px solid #6b46c1; padding-bottom: 0.5rem; }
-    h2 { color: #6b46c1; margin-top: 2rem; }
-    h3 { color: #4a5568; margin-top: 1.5rem; font-size: 1.1rem; }
-    section {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin: 1.5rem 0;
-    }
-    .violation-label {
-      background: #fef2f2;
-      color: #dc2626;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .rule-id {
-      background: #f3e8ff;
-      color: #7c3aed;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-family: monospace;
-    }
-    .confidence-badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-left: 0.5rem;
-    }
-    .confidence-certain { background: #dcfce7; color: #16a34a; }
-    .confidence-likely { background: #fef3c7; color: #d97706; }
-    .confidence-needs-review { background: #ffedd5; color: #ea580c; }
-    .experimental { background: #e0e7ff; color: #4f46e5; }
-    code {
-      background: #e5e7eb;
-      padding: 0.125rem 0.375rem;
-      border-radius: 4px;
-      font-size: 0.875rem;
-    }
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #1a1a1a;
+        border-bottom: 2px solid #6b46c1;
+        padding-bottom: 0.5rem;
+      }
+      h2 {
+        color: #6b46c1;
+        margin-top: 2rem;
+      }
+      h3 {
+        color: #4a5568;
+        margin-top: 1.5rem;
+        font-size: 1.1rem;
+      }
+      section {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+      }
+      .violation-label {
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .rule-id {
+        background: #f3e8ff;
+        color: #7c3aed;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-family: monospace;
+      }
+      .confidence-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+      }
+      .confidence-certain {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+      .confidence-likely {
+        background: #fef3c7;
+        color: #d97706;
+      }
+      .confidence-needs-review {
+        background: #ffedd5;
+        color: #ea580c;
+      }
+      .experimental {
+        background: #e0e7ff;
+        color: #4f46e5;
+      }
+      code {
+        background: #e5e7eb;
+        padding: 0.125rem 0.375rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+      }
 
-    /* VIOLATION: Texto justificado (texto-justificado) */
-    .justified-text {
-      text-align: justify;
-      max-width: 600px;
-    }
+      /* VIOLATION: Texto justificado (texto-justificado) */
+      .justified-text {
+        text-align: justify;
+        max-width: 600px;
+      }
 
-    /* VIOLATION: Texto em maiusculas via CSS (texto-maiusculo-css) */
-    .uppercase-text {
-      text-transform: uppercase;
-    }
+      /* VIOLATION: Texto em maiusculas via CSS (texto-maiusculo-css) */
+      .uppercase-text {
+        text-transform: uppercase;
+      }
 
-    /* VIOLATION: Fonte muito pequena (fonte-muito-pequena) */
-    .tiny-text {
-      font-size: 9px;
-    }
+      /* VIOLATION: Fonte muito pequena (fonte-muito-pequena) */
+      .tiny-text {
+        font-size: 9px;
+      }
 
-    /* Link sem sublinhado para teste */
-    .text-block a.no-underline {
-      color: #2563eb;
-      text-decoration: none;
-    }
+      /* Link sem sublinhado para teste */
+      .text-block a.no-underline {
+        color: #2563eb;
+        text-decoration: none;
+      }
 
-    /* Animacao sem controle */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    .animated-box {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(135deg, #6b46c1, #9333ea);
-      border-radius: 8px;
-      animation: pulse 2s infinite;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
+      /* Animacao sem controle */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .animated-box {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #6b46c1, #9333ea);
+        border-radius: 8px;
+        animation: pulse 2s infinite;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Teste de Confidence Levels</h1>
+    <p>
+      Esta pagina contem exemplos de violacoes organizadas por nivel de
+      confianca esperado.
+    </p>
 
-<h1>Teste de Confidence Levels</h1>
-<p>Esta pagina contem exemplos de violacoes organizadas por nivel de confianca esperado.</p>
+    <!-- ============================================ -->
+    <!-- CERTAIN - ALTA CERTEZA (100%) -->
+    <!-- ============================================ -->
+    <h2>
+      <span class="confidence-badge confidence-certain">CERTAIN</span> Alta
+      Certeza (100%)
+    </h2>
+    <p>Violacoes que sao certamente problemas reais de acessibilidade.</p>
 
-<!-- ============================================ -->
-<!-- CERTAIN - ALTA CERTEZA (100%) -->
-<!-- ============================================ -->
-<h2><span class="confidence-badge confidence-certain">CERTAIN</span> Alta Certeza (100%)</h2>
-<p>Violacoes que sao certamente problemas reais de acessibilidade.</p>
+    <!-- image-alt -->
+    <section>
+      <p>
+        <span class="rule-id">image-alt</span>
+        <span class="confidence-badge confidence-certain">CERTAIN</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Imagens sem atributo alt:
+      </p>
+      <img
+        src="https://placehold.co/150x100?text=Sem+Alt"
+        width="150"
+        height="100"
+      />
+      <img
+        src="https://placehold.co/100x100?text=Foto"
+        width="100"
+        height="100"
+      />
+    </section>
 
-<!-- image-alt -->
-<section>
-  <p><span class="rule-id">image-alt</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
-  <p><span class="violation-label">Violacao</span> Imagens sem atributo alt:</p>
-  <img src="https://via.placeholder.com/150x100?text=Sem+Alt" width="150" height="100">
-  <img src="https://via.placeholder.com/100x100?text=Foto" width="100" height="100">
-</section>
+    <!-- button-name -->
+    <section>
+      <p>
+        <span class="rule-id">button-name</span>
+        <span class="confidence-badge confidence-certain">CERTAIN</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Botoes sem nome acessivel:
+      </p>
+      <button style="padding: 0.5rem">
+        <img src="https://placehold.co/20x20?text=X" width="20" height="20" />
+      </button>
+      <button style="padding: 0.5rem"></button>
+    </section>
 
-<!-- button-name -->
-<section>
-  <p><span class="rule-id">button-name</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
-  <p><span class="violation-label">Violacao</span> Botoes sem nome acessivel:</p>
-  <button style="padding: 0.5rem;"><img src="https://via.placeholder.com/20x20?text=X" width="20" height="20"></button>
-  <button style="padding: 0.5rem;"></button>
-</section>
+    <!-- link-name -->
+    <section>
+      <p>
+        <span class="rule-id">link-name</span>
+        <span class="confidence-badge confidence-certain">CERTAIN</span>
+      </p>
+      <p><span class="violation-label">Violacao</span> Links sem texto:</p>
+      <a href="/pagina1"
+        ><img src="https://placehold.co/30x20?text=Ir" width="30" height="20"
+      /></a>
+      <a href="/pagina2"></a>
+    </section>
 
-<!-- link-name -->
-<section>
-  <p><span class="rule-id">link-name</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
-  <p><span class="violation-label">Violacao</span> Links sem texto:</p>
-  <a href="/pagina1"><img src="https://via.placeholder.com/30x20?text=Ir" width="30" height="20"></a>
-  <a href="/pagina2"></a>
-</section>
+    <!-- conteudo-lorem-ipsum -->
+    <section>
+      <p>
+        <span class="rule-id">conteudo-lorem-ipsum</span>
+        <span class="confidence-badge confidence-certain">CERTAIN</span>
+      </p>
+      <p><span class="violation-label">Violacao</span> Texto placeholder:</p>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat.
+      </p>
+    </section>
 
-<!-- conteudo-lorem-ipsum -->
-<section>
-  <p><span class="rule-id">conteudo-lorem-ipsum</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
-  <p><span class="violation-label">Violacao</span> Texto placeholder:</p>
-  <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-  </p>
-</section>
-
-<!-- autoplay-video-audio -->
-<section>
-  <p><span class="rule-id">autoplay-video-audio</span> <span class="confidence-badge confidence-certain">CERTAIN</span></p>
-  <p><span class="violation-label">Violacao</span> Video com autoplay (comentado para nao irritar):</p>
-  <!-- Descomente para testar:
+    <!-- autoplay-video-audio -->
+    <section>
+      <p>
+        <span class="rule-id">autoplay-video-audio</span>
+        <span class="confidence-badge confidence-certain">CERTAIN</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Video com autoplay
+        (comentado para nao irritar):
+      </p>
+      <!-- Descomente para testar:
   <video autoplay src="video.mp4" width="320"></video>
   -->
-  <pre>&lt;video autoplay src="video.mp4"&gt;&lt;/video&gt;</pre>
-</section>
+      <pre>&lt;video autoplay src="video.mp4"&gt;&lt;/video&gt;</pre>
+    </section>
 
-<!-- ============================================ -->
-<!-- LIKELY - ALTA PROBABILIDADE (~90%) -->
-<!-- ============================================ -->
-<h2><span class="confidence-badge confidence-likely">LIKELY</span> Alta Probabilidade (~90%)</h2>
-<p>Violacoes com alta probabilidade, mas podem ter excecoes validas.</p>
+    <!-- ============================================ -->
+    <!-- LIKELY - ALTA PROBABILIDADE (~90%) -->
+    <!-- ============================================ -->
+    <h2>
+      <span class="confidence-badge confidence-likely">LIKELY</span> Alta
+      Probabilidade (~90%)
+    </h2>
+    <p>Violacoes com alta probabilidade, mas podem ter excecoes validas.</p>
 
-<!-- color-contrast -->
-<section>
-  <p><span class="rule-id">color-contrast</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Texto com baixo contraste:</p>
-  <p style="color: #aaa; background: #fff;">Este texto cinza claro tem contraste insuficiente.</p>
-  <p style="color: #999; background: #ccc;">Este texto tambem tem contraste ruim.</p>
-</section>
+    <!-- color-contrast -->
+    <section>
+      <p>
+        <span class="rule-id">color-contrast</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Texto com baixo contraste:
+      </p>
+      <p style="color: #aaa; background: #fff">
+        Este texto cinza claro tem contraste insuficiente.
+      </p>
+      <p style="color: #999; background: #ccc">
+        Este texto tambem tem contraste ruim.
+      </p>
+    </section>
 
-<!-- imagem-alt-nome-arquivo -->
-<section>
-  <p><span class="rule-id">imagem-alt-nome-arquivo</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Alt parece nome de arquivo:</p>
-  <img src="https://via.placeholder.com/150x100" alt="IMG_20241220_143052.jpg" width="150" height="100">
-  <img src="https://via.placeholder.com/120x80" alt="DSC_0042.png" width="120" height="80">
-  <img src="https://via.placeholder.com/100x100" alt="Screenshot_2024-12-20.png" width="100" height="100">
-</section>
+    <!-- imagem-alt-nome-arquivo -->
+    <section>
+      <p>
+        <span class="rule-id">imagem-alt-nome-arquivo</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Alt parece nome de
+        arquivo:
+      </p>
+      <img
+        src="https://placehold.co/150x100"
+        alt="IMG_20241220_143052.jpg"
+        width="150"
+        height="100"
+      />
+      <img
+        src="https://placehold.co/120x80"
+        alt="DSC_0042.png"
+        width="120"
+        height="80"
+      />
+      <img
+        src="https://placehold.co/100x100"
+        alt="Screenshot_2024-12-20.png"
+        width="100"
+        height="100"
+      />
+    </section>
 
-<!-- texto-justificado -->
-<section>
-  <p><span class="rule-id">texto-justificado</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Texto com alinhamento justificado:</p>
-  <p class="justified-text">
-    Este paragrafo usa text-align: justify, o que pode criar espacos irregulares entre palavras
-    e dificultar a leitura para pessoas com dislexia ou baixa visao. A WCAG 1.4.8 (AAA) recomenda
-    evitar texto justificado para melhorar a legibilidade. O problema e especialmente grave em
-    colunas estreitas onde os espacos ficam muito grandes.
-  </p>
-</section>
+    <!-- texto-justificado -->
+    <section>
+      <p>
+        <span class="rule-id">texto-justificado</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Texto com alinhamento
+        justificado:
+      </p>
+      <p class="justified-text">
+        Este paragrafo usa text-align: justify, o que pode criar espacos
+        irregulares entre palavras e dificultar a leitura para pessoas com
+        dislexia ou baixa visao. A WCAG 1.4.8 (AAA) recomenda evitar texto
+        justificado para melhorar a legibilidade. O problema e especialmente
+        grave em colunas estreitas onde os espacos ficam muito grandes.
+      </p>
+    </section>
 
-<!-- texto-maiusculo-css -->
-<section>
-  <p><span class="rule-id">texto-maiusculo-css</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Texto em maiusculas via CSS:</p>
-  <p class="uppercase-text">
-    Este paragrafo inteiro esta em maiusculas via CSS (text-transform: uppercase).
-    Texto todo em maiusculas e mais dificil de ler, especialmente para pessoas com dislexia.
-  </p>
-</section>
+    <!-- texto-maiusculo-css -->
+    <section>
+      <p>
+        <span class="rule-id">texto-maiusculo-css</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Texto em maiusculas via
+        CSS:
+      </p>
+      <p class="uppercase-text">
+        Este paragrafo inteiro esta em maiusculas via CSS (text-transform:
+        uppercase). Texto todo em maiusculas e mais dificil de ler,
+        especialmente para pessoas com dislexia.
+      </p>
+    </section>
 
-<!-- br-excessivo-layout -->
-<section>
-  <p><span class="rule-id">br-excessivo-layout</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Multiplos BR para espacamento:</p>
-  <p>Primeiro paragrafo</p>
-  <br><br><br><br>
-  <p>Segundo paragrafo (separado por 4 BR tags)</p>
-</section>
+    <!-- br-excessivo-layout -->
+    <section>
+      <p>
+        <span class="rule-id">br-excessivo-layout</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Multiplos BR para
+        espacamento:
+      </p>
+      <p>Primeiro paragrafo</p>
+      <br /><br /><br /><br />
+      <p>Segundo paragrafo (separado por 4 BR tags)</p>
+    </section>
 
-<!-- emag-tabela-layout -->
-<section>
-  <p><span class="rule-id">emag-tabela-layout</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Tabela usada para layout:</p>
-  <table border="0" cellpadding="10" cellspacing="0" width="100%">
-    <tr>
-      <td style="background: #f0f0f0;">Menu lateral</td>
-      <td style="background: #fff;">
-        <h3 style="margin-top: 0;">Conteudo principal</h3>
-        <p>Esta tabela esta sendo usada para layout em vez de CSS.</p>
-      </td>
-    </tr>
-  </table>
-</section>
+    <!-- emag-tabela-layout -->
+    <section>
+      <p>
+        <span class="rule-id">emag-tabela-layout</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Tabela usada para layout:
+      </p>
+      <table border="0" cellpadding="10" cellspacing="0" width="100%">
+        <tr>
+          <td style="background: #f0f0f0">Menu lateral</td>
+          <td style="background: #fff">
+            <h3 style="margin-top: 0">Conteudo principal</h3>
+            <p>Esta tabela esta sendo usada para layout em vez de CSS.</p>
+          </td>
+        </tr>
+      </table>
+    </section>
 
-<!-- captcha-sem-alternativa -->
-<section>
-  <p><span class="rule-id">captcha-sem-alternativa</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> CAPTCHA visual sem alternativa de audio:</p>
-  <div class="g-recaptcha" data-sitekey="fake-key-for-testing" style="border: 1px solid #ccc; padding: 1rem; display: inline-block;">
-    <label style="display: flex; align-items: center; gap: 0.5rem;">
-      <input type="checkbox"> Nao sou um robo
-    </label>
-    <small style="color: #666;">reCAPTCHA (simulado - sem botao de audio)</small>
-  </div>
-</section>
+    <!-- captcha-sem-alternativa -->
+    <section>
+      <p>
+        <span class="rule-id">captcha-sem-alternativa</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> CAPTCHA visual sem
+        alternativa de audio:
+      </p>
+      <div
+        class="g-recaptcha"
+        data-sitekey="fake-key-for-testing"
+        style="border: 1px solid #ccc; padding: 1rem; display: inline-block"
+      >
+        <label style="display: flex; align-items: center; gap: 0.5rem">
+          <input type="checkbox" /> Nao sou um robo
+        </label>
+        <small style="color: #666"
+          >reCAPTCHA (simulado - sem botao de audio)</small
+        >
+      </div>
+    </section>
 
-<!-- animacao-sem-pause -->
-<section>
-  <p><span class="rule-id">animacao-sem-pause</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Animacao infinita sem controle de pausa:</p>
-  <div style="display: flex; gap: 1rem; align-items: center;">
-    <div class="animated-box">Pulsando</div>
-    <p style="margin: 0;">Esta caixa pulsa infinitamente sem opcao de pausar.</p>
-  </div>
-</section>
+    <!-- animacao-sem-pause -->
+    <section>
+      <p>
+        <span class="rule-id">animacao-sem-pause</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Animacao infinita sem
+        controle de pausa:
+      </p>
+      <div style="display: flex; gap: 1rem; align-items: center">
+        <div class="animated-box">Pulsando</div>
+        <p style="margin: 0">
+          Esta caixa pulsa infinitamente sem opcao de pausar.
+        </p>
+      </div>
+    </section>
 
-<!-- fonte-muito-pequena -->
-<section>
-  <p><span class="rule-id">fonte-muito-pequena</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Texto com fonte menor que 12px:</p>
-  <p class="tiny-text">Este texto tem apenas 9px de tamanho, muito pequeno para leitura confortavel.</p>
-  <p style="font-size: 10px;">Este texto tem 10px, ainda abaixo do minimo recomendado.</p>
-</section>
+    <!-- fonte-muito-pequena -->
+    <section>
+      <p>
+        <span class="rule-id">fonte-muito-pequena</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Texto com fonte menor que
+        12px:
+      </p>
+      <p class="tiny-text">
+        Este texto tem apenas 9px de tamanho, muito pequeno para leitura
+        confortavel.
+      </p>
+      <p style="font-size: 10px">
+        Este texto tem 10px, ainda abaixo do minimo recomendado.
+      </p>
+    </section>
 
-<!-- ============================================ -->
-<!-- NEEDS_REVIEW - PRECISA VERIFICACAO HUMANA -->
-<!-- ============================================ -->
-<h2><span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span> Precisa Verificacao</h2>
-<p>Violacoes que requerem verificacao humana para confirmar.</p>
+    <!-- ============================================ -->
+    <!-- NEEDS_REVIEW - PRECISA VERIFICACAO HUMANA -->
+    <!-- ============================================ -->
+    <h2>
+      <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span>
+      Precisa Verificacao
+    </h2>
+    <p>Violacoes que requerem verificacao humana para confirmar.</p>
 
-<!-- link-texto-generico -->
-<section>
-  <p><span class="rule-id">link-texto-generico</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Links com texto generico:</p>
-  <p>Para saber mais sobre nossos servicos, <a href="/servicos">clique aqui</a>.</p>
-  <p>Veja a documentacao completa: <a href="/docs">saiba mais</a></p>
-  <p>Acesse agora: <a href="/login">acesse</a></p>
-  <p>Baixe o arquivo: <a href="/arquivo.pdf">baixar</a></p>
-</section>
+    <!-- link-texto-generico -->
+    <section>
+      <p>
+        <span class="rule-id">link-texto-generico</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Links com texto generico:
+      </p>
+      <p>
+        Para saber mais sobre nossos servicos,
+        <a href="/servicos">clique aqui</a>.
+      </p>
+      <p>Veja a documentacao completa: <a href="/docs">saiba mais</a></p>
+      <p>Acesse agora: <a href="/login">acesse</a></p>
+      <p>Baixe o arquivo: <a href="/arquivo.pdf">baixar</a></p>
+    </section>
 
-<!-- rotulo-curto-ambiguo -->
-<section>
-  <p><span class="rule-id">rotulo-curto-ambiguo</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Botoes/links com rotulos muito curtos:</p>
-  <button style="padding: 0.5rem 1rem;">X</button>
-  <button style="padding: 0.5rem 1rem;">></button>
-  <button style="padding: 0.5rem 1rem;"><</button>
-  <a href="/next">+</a>
-</section>
+    <!-- rotulo-curto-ambiguo -->
+    <section>
+      <p>
+        <span class="rule-id">rotulo-curto-ambiguo</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Botoes/links com rotulos
+        muito curtos:
+      </p>
+      <button style="padding: 0.5rem 1rem">X</button>
+      <button style="padding: 0.5rem 1rem">></button>
+      <button style="padding: 0.5rem 1rem"><</button>
+      <a href="/next">+</a>
+    </section>
 
-<!-- landmark-one-main / region -->
-<section>
-  <p><span class="rule-id">landmark-one-main / region</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Conteudo fora de landmarks:</p>
-  <p>Esta pagina nao tem elemento <code>&lt;main&gt;</code> e o conteudo nao esta em landmarks semanticos.</p>
-</section>
+    <!-- landmark-one-main / region -->
+    <section>
+      <p>
+        <span class="rule-id">landmark-one-main / region</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Conteudo fora de
+        landmarks:
+      </p>
+      <p>
+        Esta pagina nao tem elemento <code>&lt;main&gt;</code> e o conteudo nao
+        esta em landmarks semanticos.
+      </p>
+    </section>
 
-<!-- ============================================ -->
-<!-- EXPERIMENTAL - REGRAS EM TESTE -->
-<!-- ============================================ -->
-<h2><span class="confidence-badge experimental">EXPERIMENTAL</span> Regras Experimentais</h2>
-<p>Regras que ainda estao em fase de teste e podem ter mais falsos positivos.</p>
-
-<!-- legibilidade-texto-complexo (COGA) -->
-<section>
-  <p><span class="rule-id">legibilidade-texto-complexo</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Texto com baixa legibilidade (Flesch &lt; 50):</p>
-  <p>
-    Considerando a imprescindibilidade da observancia dos preceitos constitucionais
-    fundamentais atinentes a salvaguarda dos direitos e garantias individuais,
-    precipuamente no que concerne a inviolabilidade do domicilio e a preservacao
-    da intimidade, vida privada, honra e imagem das pessoas, conforme estabelecido
-    no artigo quinto da Constituicao Federal, impoe-se a necessidade de implementacao
-    de mecanismos procedimentais que assegurem a efetivacao dos principios basilares
-    do ordenamento juridico patrio, mormente aqueles relacionados a dignidade da
-    pessoa humana e a proporcionalidade das medidas restritivas de direitos.
-  </p>
-</section>
-
-<!-- siglas-sem-expansao (COGA) -->
-<section>
-  <p><span class="rule-id">siglas-sem-expansao</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Siglas brasileiras sem expansao:</p>
-  <p>
-    O BNDES anunciou novas linhas de credito em parceria com o SEBRAE para
-    apoiar pequenas empresas. A medida foi aprovada pelo CMN e tera impacto
-    direto no PIB nacional. O TCU fiscalizara a aplicacao dos recursos.
-    Empresas optantes pelo SIMPLES terao condicoes especiais conforme a LGPD.
-  </p>
-</section>
-
-<!-- linguagem-inconsistente (COGA) -->
-<section>
-  <p><span class="rule-id">linguagem-inconsistente</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Texto em ingles sem marcacao de idioma:</p>
-  <p>
-    Welcome to our website! We are happy to have you here.
-    Please feel free to browse through our products and services.
-    If you have any questions, don't hesitate to contact us.
-  </p>
-</section>
-
-<!-- emag-breadcrumb -->
-<section>
-  <p><span class="rule-id">emag-breadcrumb</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Pagina sem breadcrumb:</p>
-  <p>Esta pagina interna nao possui navegacao de breadcrumb para ajudar usuarios a entender sua localizacao no site.</p>
-</section>
-
-<!-- brasil-libras-plugin -->
-<section>
-  <p><span class="rule-id">brasil-libras-plugin</span> <span class="confidence-badge experimental">EXPERIMENTAL</span> <span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></p>
-  <p><span class="violation-label">Violacao</span> Site sem plugin de Libras:</p>
-  <p>Este site nao possui VLibras, Hand Talk, SignAll ou outro plugin de traducao para Libras.</p>
-</section>
-
-<!-- emag-skip-links -->
-<section>
-  <p><span class="rule-id">emag-skip-links</span> <span class="confidence-badge confidence-likely">LIKELY</span></p>
-  <p><span class="violation-label">Violacao</span> Pagina sem links de pular:</p>
-  <p>Esta pagina nao tem links de "Pular para o conteudo principal" no inicio.</p>
-</section>
-
-<!-- ============================================ -->
-<!-- WCAG PARTIAL RULES -->
-<!-- ============================================ -->
-<h2>WCAG Partial Rules</h2>
-<p>Regras WCAG com deteccao parcial automatizada.</p>
-
-<!-- input-sem-autocomplete -->
-<section>
-  <p><span class="rule-id">input-sem-autocomplete</span></p>
-  <p><span class="violation-label">Violacao</span> Campos sem autocomplete:</p>
-  <form style="display: grid; gap: 0.5rem; max-width: 300px;">
-    <div>
-      <label for="nome">Nome completo:</label>
-      <input type="text" id="nome" name="name" placeholder="Joao da Silva" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" placeholder="joao@email.com" style="width: 100%; padding: 0.5rem;">
-    </div>
-    <div>
-      <label for="telefone">Telefone:</label>
-      <input type="tel" id="telefone" name="phone" placeholder="(11) 99999-9999" style="width: 100%; padding: 0.5rem;">
-    </div>
-  </form>
-</section>
-
-<!-- link-sem-underline-em-texto -->
-<section>
-  <p><span class="rule-id">link-sem-underline-em-texto</span></p>
-  <p><span class="violation-label">Violacao</span> Links sem sublinhado em texto corrido:</p>
-  <div class="text-block">
+    <!-- ============================================ -->
+    <!-- EXPERIMENTAL - REGRAS EM TESTE -->
+    <!-- ============================================ -->
+    <h2>
+      <span class="confidence-badge experimental">EXPERIMENTAL</span> Regras
+      Experimentais
+    </h2>
     <p>
-      Para saber mais sobre acessibilidade, visite o site do
-      <a href="https://www.w3.org" class="no-underline">W3C</a> e leia as diretrizes
-      <a href="https://www.w3.org/WAI/WCAG22" class="no-underline">WCAG 2.2</a>.
-      No Brasil, consulte o <a href="https://emag.governoeletronico.gov.br" class="no-underline">eMAG 3.1</a>.
+      Regras que ainda estao em fase de teste e podem ter mais falsos positivos.
     </p>
-  </div>
-</section>
 
-<!-- video-sem-legendas -->
-<section>
-  <p><span class="rule-id">video-sem-legendas</span></p>
-  <p><span class="violation-label">Violacao</span> Video sem track de legendas:</p>
-  <video width="320" controls style="background: #000; border-radius: 8px;">
-    <source src="video-exemplo.mp4" type="video/mp4">
-    Seu navegador nao suporta video HTML5.
-  </video>
-</section>
+    <!-- legibilidade-texto-complexo (COGA) -->
+    <section>
+      <p>
+        <span class="rule-id">legibilidade-texto-complexo</span>
+        <span class="confidence-badge experimental">EXPERIMENTAL</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Texto com baixa
+        legibilidade (Flesch &lt; 50):
+      </p>
+      <p>
+        Considerando a imprescindibilidade da observancia dos preceitos
+        constitucionais fundamentais atinentes a salvaguarda dos direitos e
+        garantias individuais, precipuamente no que concerne a inviolabilidade
+        do domicilio e a preservacao da intimidade, vida privada, honra e imagem
+        das pessoas, conforme estabelecido no artigo quinto da Constituicao
+        Federal, impoe-se a necessidade de implementacao de mecanismos
+        procedimentais que assegurem a efetivacao dos principios basilares do
+        ordenamento juridico patrio, mormente aqueles relacionados a dignidade
+        da pessoa humana e a proporcionalidade das medidas restritivas de
+        direitos.
+      </p>
+    </section>
 
-<!-- select-onchange-navega -->
-<section>
-  <p><span class="rule-id">select-onchange-navega</span></p>
-  <p><span class="violation-label">Violacao</span> Select que navega automaticamente:</p>
-  <label for="nav-select">Ir para pagina:</label>
-  <select id="nav-select" onchange="location.href=this.value" style="padding: 0.5rem;">
-    <option value="">-- Selecione --</option>
-    <option value="/home">Pagina Inicial</option>
-    <option value="/produtos">Produtos</option>
-    <option value="/contato">Contato</option>
-  </select>
-</section>
+    <!-- siglas-sem-expansao (COGA) -->
+    <section>
+      <p>
+        <span class="rule-id">siglas-sem-expansao</span>
+        <span class="confidence-badge experimental">EXPERIMENTAL</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Siglas brasileiras sem
+        expansao:
+      </p>
+      <p>
+        O BNDES anunciou novas linhas de credito em parceria com o SEBRAE para
+        apoiar pequenas empresas. A medida foi aprovada pelo CMN e tera impacto
+        direto no PIB nacional. O TCU fiscalizara a aplicacao dos recursos.
+        Empresas optantes pelo SIMPLES terao condicoes especiais conforme a
+        LGPD.
+      </p>
+    </section>
 
-<!-- ============================================ -->
-<!-- RESUMO -->
-<!-- ============================================ -->
-<h2>Resumo de Violacoes por Nivel de Confianca</h2>
-<table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-  <thead>
-    <tr style="background: #f3e8ff;">
-      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Nivel</th>
-      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Regras</th>
-      <th style="padding: 0.75rem; text-align: left; border: 1px solid #e5e7eb;">Violacoes Esperadas</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge confidence-certain">CERTAIN</span></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">image-alt, button-name, link-name, conteudo-lorem-ipsum</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~6-8</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge confidence-likely">LIKELY</span></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">color-contrast, imagem-alt-nome-arquivo, texto-justificado, br-excessivo-layout, fonte-muito-pequena</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~8-12</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge confidence-needs-review">NEEDS_REVIEW</span></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">link-texto-generico, rotulo-curto-ambiguo, landmark-one-main</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~5-8</td>
-    </tr>
-    <tr>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;"><span class="confidence-badge experimental">EXPERIMENTAL</span></td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">legibilidade-texto-complexo, siglas-sem-expansao, linguagem-inconsistente, brasil-libras-plugin, emag-breadcrumb</td>
-      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">~5-8</td>
-    </tr>
-  </tbody>
-</table>
+    <!-- linguagem-inconsistente (COGA) -->
+    <section>
+      <p>
+        <span class="rule-id">linguagem-inconsistente</span>
+        <span class="confidence-badge experimental">EXPERIMENTAL</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Texto em ingles sem
+        marcacao de idioma:
+      </p>
+      <p>
+        Welcome to our website! We are happy to have you here. Please feel free
+        to browse through our products and services. If you have any questions,
+        don't hesitate to contact us.
+      </p>
+    </section>
 
-<p style="margin-top: 2rem; padding: 1rem; background: #f3e8ff; border-radius: 8px;">
-  <strong>Como testar:</strong><br>
-  1. Sirva este arquivo: <code>npx serve acctest</code><br>
-  2. Crie um projeto apontando para a URL (ex: <code>http://localhost:3000</code>)<br>
-  3. Inicie uma auditoria com COGA habilitado<br>
-  4. Verifique os badges de confianca nas violacoes detectadas
-</p>
+    <!-- emag-breadcrumb -->
+    <section>
+      <p>
+        <span class="rule-id">emag-breadcrumb</span>
+        <span class="confidence-badge experimental">EXPERIMENTAL</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Pagina sem breadcrumb:
+      </p>
+      <p>
+        Esta pagina interna nao possui navegacao de breadcrumb para ajudar
+        usuarios a entender sua localizacao no site.
+      </p>
+    </section>
 
-<p style="padding: 1rem; background: #dcfce7; border-radius: 8px;">
-  <strong>Filtros disponiveis na UI:</strong><br>
-  - Filtrar por nivel de confianca (Certain, Likely, Needs Review)<br>
-  - Mostrar/ocultar regras experimentais<br>
-  - Badges visuais com tooltip mostrando sinais de confianca
-</p>
+    <!-- brasil-libras-plugin -->
+    <section>
+      <p>
+        <span class="rule-id">brasil-libras-plugin</span>
+        <span class="confidence-badge experimental">EXPERIMENTAL</span>
+        <span class="confidence-badge confidence-needs-review"
+          >NEEDS_REVIEW</span
+        >
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Site sem plugin de Libras:
+      </p>
+      <p>
+        Este site nao possui VLibras, Hand Talk, SignAll ou outro plugin de
+        traducao para Libras.
+      </p>
+    </section>
 
-</body>
+    <!-- emag-skip-links -->
+    <section>
+      <p>
+        <span class="rule-id">emag-skip-links</span>
+        <span class="confidence-badge confidence-likely">LIKELY</span>
+      </p>
+      <p>
+        <span class="violation-label">Violacao</span> Pagina sem links de pular:
+      </p>
+      <p>
+        Esta pagina nao tem links de "Pular para o conteudo principal" no
+        inicio.
+      </p>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- WCAG PARTIAL RULES -->
+    <!-- ============================================ -->
+    <h2>WCAG Partial Rules</h2>
+    <p>Regras WCAG com deteccao parcial automatizada.</p>
+
+    <!-- input-sem-autocomplete -->
+    <section>
+      <p><span class="rule-id">input-sem-autocomplete</span></p>
+      <p>
+        <span class="violation-label">Violacao</span> Campos sem autocomplete:
+      </p>
+      <form style="display: grid; gap: 0.5rem; max-width: 300px">
+        <div>
+          <label for="nome">Nome completo:</label>
+          <input
+            type="text"
+            id="nome"
+            name="name"
+            placeholder="Joao da Silva"
+            style="width: 100%; padding: 0.5rem"
+          />
+        </div>
+        <div>
+          <label for="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="joao@email.com"
+            style="width: 100%; padding: 0.5rem"
+          />
+        </div>
+        <div>
+          <label for="telefone">Telefone:</label>
+          <input
+            type="tel"
+            id="telefone"
+            name="phone"
+            placeholder="(11) 99999-9999"
+            style="width: 100%; padding: 0.5rem"
+          />
+        </div>
+      </form>
+    </section>
+
+    <!-- link-sem-underline-em-texto -->
+    <section>
+      <p><span class="rule-id">link-sem-underline-em-texto</span></p>
+      <p>
+        <span class="violation-label">Violacao</span> Links sem sublinhado em
+        texto corrido:
+      </p>
+      <div class="text-block">
+        <p>
+          Para saber mais sobre acessibilidade, visite o site do
+          <a href="https://www.w3.org" class="no-underline">W3C</a> e leia as
+          diretrizes
+          <a href="https://www.w3.org/WAI/WCAG22" class="no-underline"
+            >WCAG 2.2</a
+          >. No Brasil, consulte o
+          <a href="https://emag.governoeletronico.gov.br" class="no-underline"
+            >eMAG 3.1</a
+          >.
+        </p>
+      </div>
+    </section>
+
+    <!-- video-sem-legendas -->
+    <section>
+      <p><span class="rule-id">video-sem-legendas</span></p>
+      <p>
+        <span class="violation-label">Violacao</span> Video sem track de
+        legendas:
+      </p>
+      <video width="320" controls style="background: #000; border-radius: 8px">
+        <source src="video-exemplo.mp4" type="video/mp4" />
+        Seu navegador nao suporta video HTML5.
+      </video>
+    </section>
+
+    <!-- select-onchange-navega -->
+    <section>
+      <p><span class="rule-id">select-onchange-navega</span></p>
+      <p>
+        <span class="violation-label">Violacao</span> Select que navega
+        automaticamente:
+      </p>
+      <label for="nav-select">Ir para pagina:</label>
+      <select
+        id="nav-select"
+        onchange="location.href=this.value"
+        style="padding: 0.5rem"
+      >
+        <option value="">-- Selecione --</option>
+        <option value="/home">Pagina Inicial</option>
+        <option value="/produtos">Produtos</option>
+        <option value="/contato">Contato</option>
+      </select>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- IGT - TESTES GUIADOS -->
+    <!-- ============================================ -->
+    <h2 style="color: #059669; border-bottom: 2px solid #059669">
+      IGT - Testes Guiados
+    </h2>
+    <p>Violacoes especificas que ativam os Intelligent Guided Tests (IGT).</p>
+
+    <!-- IGT: images-alt-quality -->
+    <section style="border-left: 4px solid #059669">
+      <p><span class="rule-id">IGT: images-alt-quality</span></p>
+      <p>
+        Regras: <code>image-alt</code>, <code>imagem-alt-nome-arquivo</code>,
+        <code>image-redundant-alt</code>
+      </p>
+
+      <h4>Imagens sem alt (image-alt):</h4>
+      <img
+        src="https://placehold.co/200x150?text=Produto+A"
+        width="200"
+        height="150"
+      />
+      <img
+        src="https://placehold.co/180x120?text=Banner"
+        width="180"
+        height="120"
+      />
+      <img
+        src="https://placehold.co/150x150?text=Logo"
+        width="150"
+        height="150"
+      />
+
+      <h4>Alt parece nome de arquivo (imagem-alt-nome-arquivo):</h4>
+      <img
+        src="https://placehold.co/200x150"
+        alt="foto_perfil_2024.jpg"
+        width="200"
+        height="150"
+      />
+      <img
+        src="https://placehold.co/180x120"
+        alt="banner-promocao-v2.png"
+        width="180"
+        height="120"
+      />
+      <img
+        src="https://placehold.co/160x100"
+        alt="image001.gif"
+        width="160"
+        height="100"
+      />
+
+      <h4>Alt redundante com texto ao redor (image-redundant-alt):</h4>
+      <p>
+        <img
+          src="https://placehold.co/100x100?text=Carro"
+          alt="Carro vermelho"
+          width="100"
+          height="100"
+        />
+        Carro vermelho em promocao! Aproveite o carro vermelho com desconto.
+      </p>
+    </section>
+
+    <!-- IGT: links-purpose -->
+    <section style="border-left: 4px solid #059669">
+      <p><span class="rule-id">IGT: links-purpose</span></p>
+      <p>
+        Regras: <code>link-texto-generico</code>, <code>link-name</code>,
+        <code>rotulo-curto-ambiguo</code>
+      </p>
+
+      <h4>Links com texto generico (link-texto-generico):</h4>
+      <ul>
+        <li>
+          Confira nossa politica de privacidade:
+          <a href="/privacidade">clique aqui</a>
+        </li>
+        <li>Veja os termos de uso: <a href="/termos">saiba mais</a></li>
+        <li>Conheca nossos produtos: <a href="/produtos">leia mais</a></li>
+        <li>Fale conosco: <a href="/contato">acesse</a></li>
+        <li>Baixe o manual: <a href="/manual.pdf">baixar</a></li>
+        <li>Veja o video: <a href="/video">ver</a></li>
+      </ul>
+
+      <h4>Links sem nome acessivel (link-name):</h4>
+      <p>
+        Acesse: <a href="/pagina-sem-nome"></a>
+        <a href="/icone-sem-texto"
+          ><img src="https://placehold.co/24x24?text=>" width="24" height="24"
+        /></a>
+        <a href="/span-vazio"><span></span></a>
+      </p>
+
+      <h4>Rotulos curtos e ambiguos (rotulo-curto-ambiguo):</h4>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+        <button>X</button>
+        <button>?</button>
+        <button>!</button>
+        <button>+</button>
+        <button>-</button>
+        <a href="/prev">&lt;</a>
+        <a href="/next">&gt;</a>
+        <a href="/up">^</a>
+        <button>OK</button>
+        <button>Go</button>
+      </div>
+    </section>
+
+    <!-- IGT: sign-language-plugin -->
+    <section style="border-left: 4px solid #059669">
+      <p><span class="rule-id">IGT: sign-language-plugin</span></p>
+      <p>Regras: <code>brasil-libras-plugin</code></p>
+      <p>
+        <strong>Nota:</strong> Este site nao possui VLibras, Hand Talk, SignAll
+        ou outro plugin de traducao para Libras. Esta violacao e especialmente
+        relevante para sites <code>.gov.br</code> que tem obrigacao legal.
+      </p>
+      <p style="background: #fef3c7; padding: 0.5rem; border-radius: 4px">
+        Para testar o IGT de Libras, crie um projeto apontando para um site
+        .gov.br ou adicione
+        <code>?govbr=true</code> na URL para simular.
+      </p>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- RESUMO -->
+    <!-- ============================================ -->
+    <h2>Resumo de Violacoes por Nivel de Confianca</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem">
+      <thead>
+        <tr style="background: #f3e8ff">
+          <th
+            style="
+              padding: 0.75rem;
+              text-align: left;
+              border: 1px solid #e5e7eb;
+            "
+          >
+            Nivel
+          </th>
+          <th
+            style="
+              padding: 0.75rem;
+              text-align: left;
+              border: 1px solid #e5e7eb;
+            "
+          >
+            Regras
+          </th>
+          <th
+            style="
+              padding: 0.75rem;
+              text-align: left;
+              border: 1px solid #e5e7eb;
+            "
+          >
+            Violacoes Esperadas
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            <span class="confidence-badge confidence-certain">CERTAIN</span>
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            image-alt, button-name, link-name, conteudo-lorem-ipsum
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">~6-8</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            <span class="confidence-badge confidence-likely">LIKELY</span>
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            color-contrast, imagem-alt-nome-arquivo, texto-justificado,
+            br-excessivo-layout, fonte-muito-pequena
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">~8-12</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            <span class="confidence-badge confidence-needs-review"
+              >NEEDS_REVIEW</span
+            >
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            link-texto-generico, rotulo-curto-ambiguo, landmark-one-main
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">~5-8</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            <span class="confidence-badge experimental">EXPERIMENTAL</span>
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">
+            legibilidade-texto-complexo, siglas-sem-expansao,
+            linguagem-inconsistente, brasil-libras-plugin, emag-breadcrumb
+          </td>
+          <td style="padding: 0.75rem; border: 1px solid #e5e7eb">~5-8</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p
+      style="
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #f3e8ff;
+        border-radius: 8px;
+      "
+    >
+      <strong>Como testar:</strong><br />
+      1. Sirva este arquivo: <code>npx serve acctest</code><br />
+      2. Crie um projeto apontando para a URL (ex:
+      <code>http://localhost:3000</code>)<br />
+      3. Inicie uma auditoria com COGA habilitado<br />
+      4. Verifique os badges de confianca nas violacoes detectadas
+    </p>
+
+    <p style="padding: 1rem; background: #dcfce7; border-radius: 8px">
+      <strong>Filtros disponiveis na UI:</strong><br />
+      - Filtrar por nivel de confianca (Certain, Likely, Needs Review)<br />
+      - Mostrar/ocultar regras experimentais<br />
+      - Badges visuais com tooltip mostrando sinais de confianca
+    </p>
+
+    <p
+      style="
+        padding: 1rem;
+        background: #d1fae5;
+        border-radius: 8px;
+        border: 2px solid #059669;
+      "
+    >
+      <strong>Testar IGT (Intelligent Guided Tests):</strong><br />
+      1. Apos a auditoria, clique em "Iniciar Testes" no card de Testes
+      Guiados<br />
+      2. Voce devera ver 2 IGTs disponiveis:<br />
+      &nbsp;&nbsp;- <strong>Qualidade do Alt Text</strong> (image-alt,
+      imagem-alt-nome-arquivo)<br />
+      &nbsp;&nbsp;- <strong>Proposito dos Links</strong> (link-texto-generico,
+      link-name, rotulo-curto-ambiguo)<br />
+      3. Clique em "Iniciar teste" para responder as perguntas guiadas<br />
+      4. O IGT de Libras so aparece para sites .gov.br
+    </p>
+  </body>
 </html>
