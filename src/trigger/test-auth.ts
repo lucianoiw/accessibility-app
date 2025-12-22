@@ -62,8 +62,13 @@ export interface TestAuthResult {
   authUsed: string
   headersSent?: Record<string, string>
   cookiesInjected?: number
+  cookiesAfterLoad?: number  // Quantos cookies existem após carregar a página
   screenshot?: string
   message: string
+  debug?: {
+    cookieNames?: string[]
+    cookieDomain?: string
+  }
 }
 
 export const testAuthTask = task({
@@ -100,26 +105,43 @@ export const testAuthTask = task({
 
       // Injetar cookies se configurado
       let cookiesInjected = 0
+      let cookieDomain = ''
+      const cookieNames: string[] = []
+
       if (authConfig?.type === 'cookie' && authConfig.cookies) {
         const parsedUrl = new URL(baseUrl)
         const isSecure = parsedUrl.protocol === 'https:'
+
+        // Usar domínio com ponto na frente para funcionar em subdomínios
+        // Ex: .melver.com.br funciona para nasescolas.melver.com.br
+        const hostParts = parsedUrl.hostname.split('.')
+        // Se tem mais de 2 partes (ex: nasescolas.melver.com.br), usar domínio pai
+        cookieDomain = hostParts.length > 2
+          ? '.' + hostParts.slice(-3).join('.') // .melver.com.br
+          : parsedUrl.hostname
+
+        console.log(`[Auth Test] Cookie domain: ${cookieDomain} (from ${parsedUrl.hostname})`)
+
         const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
         const cookiesToSet = cookiePairs.map(pair => {
           const eqIndex = pair.indexOf('=')
           const name = pair.substring(0, eqIndex).trim()
           const value = pair.substring(eqIndex + 1).trim()
+          cookieNames.push(name)
           return {
             name,
             value,
-            domain: parsedUrl.hostname,
+            domain: cookieDomain,
             path: '/',
             secure: isSecure,
             sameSite: 'Lax' as const,
           }
         })
+
+        console.log(`[Auth Test] Setting cookies: ${cookieNames.join(', ')}`)
         await context.addCookies(cookiesToSet)
         cookiesInjected = cookiesToSet.length
-        console.log(`[Auth Test] Injected ${cookiesInjected} cookies (secure: ${isSecure})`)
+        console.log(`[Auth Test] Injected ${cookiesInjected} cookies (secure: ${isSecure}, domain: ${cookieDomain})`)
       }
 
       const page = await context.newPage()
@@ -145,6 +167,11 @@ export const testAuthTask = task({
       const finalUrl = page.url()
       const wasRedirected = finalUrl !== baseUrl
 
+      // Verificar cookies após carregar a página
+      const cookiesAfterLoad = await context.cookies()
+      console.log(`[Auth Test] Cookies after load: ${cookiesAfterLoad.length}`)
+      console.log(`[Auth Test] Cookie names: ${cookiesAfterLoad.map(c => c.name).join(', ')}`)
+
       // Verificar se tem formulário de login
       const pageContent = await page.content()
       const hasLoginForm = pageContent.toLowerCase().includes('login') ||
@@ -165,6 +192,10 @@ export const testAuthTask = task({
       const statusCode = response?.status() || responseStatus
       const success = statusCode >= 200 && statusCode < 400
 
+      console.log(`[Auth Test] Result: status=${statusCode}, success=${success}, redirected=${wasRedirected}, hasLogin=${hasLoginForm}`)
+      console.log(`[Auth Test] Final URL: ${finalUrl}`)
+      console.log(`[Auth Test] Page title: ${pageTitle}`)
+
       return {
         success,
         statusCode,
@@ -176,6 +207,7 @@ export const testAuthTask = task({
         authUsed: authConfig?.type || 'none',
         headersSent: extraHTTPHeaders,
         cookiesInjected,
+        cookiesAfterLoad: cookiesAfterLoad.length,
         screenshot: screenshotBase64,
         message: success
           ? wasRedirected && hasLoginForm
@@ -190,6 +222,10 @@ export const testAuthTask = task({
               : statusCode === 404
                 ? 'Página não encontrada (404). Verifique se a URL base está correta.'
                 : `Erro: ${statusCode}`,
+        debug: {
+          cookieNames,
+          cookieDomain,
+        },
       }
     } catch (error) {
       // Sanitize error - não expor detalhes internos
