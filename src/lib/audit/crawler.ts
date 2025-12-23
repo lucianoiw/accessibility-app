@@ -286,9 +286,32 @@ export async function crawlWebsite(
 
   // Build auth headers
   const authHeaders: Record<string, string> = {}
+  let userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
   if (authConfig?.type === 'bearer' && authConfig.token) {
     authHeaders['Authorization'] = `Bearer ${authConfig.token}`
     console.log(`[Crawler] Using Bearer token authentication`)
+  }
+
+  // cURL Import: usar headers e user-agent capturados do browser
+  if (authConfig?.type === 'curl_import') {
+    if (authConfig.extraHeaders) {
+      const skipHeaders = [
+        'cookie', 'host', 'content-length', 'connection',
+        'accept-encoding', 'origin', 'referer',
+        'if-modified-since', 'if-none-match', 'cache-control',
+      ]
+      for (const [key, value] of Object.entries(authConfig.extraHeaders)) {
+        if (!skipHeaders.includes(key.toLowerCase())) {
+          authHeaders[key] = value
+        }
+      }
+      console.log(`[Crawler] Using ${Object.keys(authHeaders).length} headers from cURL import`)
+    }
+    if (authConfig.userAgent) {
+      userAgent = authConfig.userAgent
+      console.log(`[Crawler] Using User-Agent from cURL: ${userAgent.substring(0, 50)}...`)
+    }
   }
 
   // Normalizar URL base
@@ -315,8 +338,6 @@ export async function crawlWebsite(
     let browser: Browser | null = null
 
     try {
-      // Usar headless: 'new' para novo modo headless (menos detectável)
-      // Adicionar args para esconder características de headless
       browser = await chromium.launch({
         headless: true,
         args: [
@@ -325,15 +346,13 @@ export async function crawlWebsite(
         ],
       })
       const context = await browser.newContext({
-        // User-Agent real de Chrome para evitar bloqueio de bots
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        userAgent,
         extraHTTPHeaders: authHeaders,
-        // Esconder webdriver
         bypassCSP: true,
       })
 
-      // Injetar cookies se configurado
-      if (authConfig?.type === 'cookie' && authConfig.cookies) {
+      // Injetar cookies se configurado (cookie ou curl_import)
+      if ((authConfig?.type === 'cookie' || authConfig?.type === 'curl_import') && authConfig.cookies) {
         const isSecure = base.protocol === 'https:'
         const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
         const cookiesToSet = cookiePairs.map(pair => {
@@ -756,9 +775,32 @@ export async function discoverInitialUrls(
 
   // Build auth headers
   const authHeaders: Record<string, string> = {}
+  let userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
   if (authConfig?.type === 'bearer' && authConfig.token) {
     authHeaders['Authorization'] = `Bearer ${authConfig.token}`
     console.log(`[Discovery] Using Bearer token authentication`)
+  }
+
+  // cURL Import: usar headers e user-agent capturados do browser
+  if (authConfig?.type === 'curl_import') {
+    if (authConfig.extraHeaders) {
+      const skipHeaders = [
+        'cookie', 'host', 'content-length', 'connection',
+        'accept-encoding', 'origin', 'referer',
+        'if-modified-since', 'if-none-match', 'cache-control',
+      ]
+      for (const [key, value] of Object.entries(authConfig.extraHeaders)) {
+        if (!skipHeaders.includes(key.toLowerCase())) {
+          authHeaders[key] = value
+        }
+      }
+      console.log(`[Discovery] Using ${Object.keys(authHeaders).length} headers from cURL import`)
+    }
+    if (authConfig.userAgent) {
+      userAgent = authConfig.userAgent
+      console.log(`[Discovery] Using User-Agent from cURL: ${userAgent.substring(0, 50)}...`)
+    }
   }
 
   // Normalizar URL base
@@ -767,6 +809,7 @@ export async function discoverInitialUrls(
   const normalizedBase = normalizeUrl(baseUrl)
 
   console.log(`[Discovery] Target: ${targetCount} páginas, buscando ${targetWithMargin} candidatos (margem ${margin}x)`)
+  console.log(`[Discovery] Auth type: ${authConfig?.type || 'none'}`)
 
   // 1. Buscar no sitemap primeiro (rápido)
   const sitemapUrls = await fetchSitemap(baseUrl, authHeaders)
@@ -805,13 +848,13 @@ export async function discoverInitialUrls(
       ],
     })
     const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      userAgent,
       extraHTTPHeaders: authHeaders,
       bypassCSP: true,
     })
 
-    // Injetar cookies se configurado
-    if (authConfig?.type === 'cookie' && authConfig.cookies) {
+    // Injetar cookies se configurado (cookie ou curl_import)
+    if ((authConfig?.type === 'cookie' || authConfig?.type === 'curl_import') && authConfig.cookies) {
       const isSecure = base.protocol === 'https:'
       const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
       const cookiesToSet = cookiePairs.map(pair => {
@@ -1101,9 +1144,32 @@ export async function discoverWithPathScope(
 
   // Build auth headers
   const authHeaders: Record<string, string> = {}
+  let userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
   if (authConfig?.type === 'bearer' && authConfig.token) {
     authHeaders['Authorization'] = `Bearer ${authConfig.token}`
     console.log(`[PathScopedCrawl] Using Bearer token authentication`)
+  }
+
+  // cURL Import: usar headers e user-agent capturados do browser
+  if (authConfig?.type === 'curl_import') {
+    if (authConfig.extraHeaders) {
+      const skipHeaders = [
+        'cookie', 'host', 'content-length', 'connection',
+        'accept-encoding', 'origin', 'referer',
+        'if-modified-since', 'if-none-match', 'cache-control',
+      ]
+      for (const [key, value] of Object.entries(authConfig.extraHeaders)) {
+        if (!skipHeaders.includes(key.toLowerCase())) {
+          authHeaders[key] = value
+        }
+      }
+      console.log(`[PathScopedCrawl] Using ${Object.keys(authHeaders).length} headers from cURL import`)
+    }
+    if (authConfig.userAgent) {
+      userAgent = authConfig.userAgent
+      console.log(`[PathScopedCrawl] Using User-Agent from cURL: ${userAgent.substring(0, 50)}...`)
+    }
   }
 
   // Extrair informações da URL inicial
@@ -1119,6 +1185,7 @@ export async function discoverWithPathScope(
   console.log(`[PathScopedCrawl] Max depth: ${depth}`)
   console.log(`[PathScopedCrawl] Exclude paths: ${excludePaths.join(', ') || 'none'}`)
   console.log(`[PathScopedCrawl] Target: ${maxPages} páginas, buscando ${targetWithMargin} candidatos`)
+  console.log(`[PathScopedCrawl] Auth type: ${authConfig?.type || 'none'}`)
 
   let browser: Browser | null = null
 
@@ -1131,13 +1198,13 @@ export async function discoverWithPathScope(
       ],
     })
     const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      userAgent,
       extraHTTPHeaders: authHeaders,
       bypassCSP: true,
     })
 
-    // Injetar cookies se configurado
-    if (authConfig?.type === 'cookie' && authConfig.cookies) {
+    // Injetar cookies se configurado (cookie ou curl_import)
+    if ((authConfig?.type === 'cookie' || authConfig?.type === 'curl_import') && authConfig.cookies) {
       const isSecure = startUrlObj.protocol === 'https:'
       const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
       const cookiesToSet = cookiePairs.map(pair => {

@@ -347,21 +347,54 @@ export async function auditPage(
 
     // Build extra HTTP headers based on auth config
     const extraHTTPHeaders: Record<string, string> = {}
+
+    // User-Agent padrão (pode ser sobrescrito por curl_import)
+    let userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
     if (authConfig?.type === 'bearer' && authConfig.token) {
       extraHTTPHeaders['Authorization'] = `Bearer ${authConfig.token}`
       console.log(`[Auditor] Using Bearer token authentication`)
     }
 
+    // cURL Import: usar headers e user-agent capturados do browser
+    if (authConfig?.type === 'curl_import') {
+      // Headers que NÃO devem ser copiados (podem atrapalhar o processo)
+      if (authConfig.extraHeaders) {
+        const skipHeaders = [
+          'cookie',           // Tratado separadamente
+          'host',             // Playwright define automaticamente
+          'content-length',   // Muda conforme a request
+          'connection',       // Gerenciado pelo HTTP client
+          'accept-encoding',  // Pode causar problemas de compressão
+          'origin',           // Pode causar problemas de CORS
+          'referer',          // Pode ter URL errada
+          'if-modified-since', // Cache header, não queremos
+          'if-none-match',    // Cache header
+          'cache-control',    // Queremos conteúdo fresh
+        ]
+        for (const [key, value] of Object.entries(authConfig.extraHeaders)) {
+          if (!skipHeaders.includes(key.toLowerCase())) {
+            extraHTTPHeaders[key] = value
+          }
+        }
+        console.log(`[Auditor] Using ${Object.keys(extraHTTPHeaders).length} headers from cURL import`)
+      }
+      // Usar user-agent do cURL se disponível
+      if (authConfig.userAgent) {
+        userAgent = authConfig.userAgent
+        console.log(`[Auditor] Using User-Agent from cURL: ${userAgent.substring(0, 50)}...`)
+      }
+    }
+
     const context = await browser.newContext({
-      // User-Agent real de Chrome para evitar bloqueio de bots
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      userAgent,
       extraHTTPHeaders,
       // Esconder webdriver
       bypassCSP: true,
     })
 
-    // Injetar cookies se configurado
-    if (authConfig?.type === 'cookie' && authConfig.cookies) {
+    // Injetar cookies se configurado (cookie ou curl_import)
+    if ((authConfig?.type === 'cookie' || authConfig?.type === 'curl_import') && authConfig.cookies) {
       const baseUrl = new URL(url)
       const isSecure = baseUrl.protocol === 'https:'
       const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
@@ -420,21 +453,42 @@ export async function auditPage(
     const wasRedirected = finalUrl !== url && new URL(finalUrl).pathname !== new URL(url).pathname
 
     if (wasRedirected) {
-      // Verificar se a URL final indica login
+      // Verificar se a URL final indica login (alta confiança)
       const loginUrlIndicators = ['/login', '/signin', '/sign-in', '/auth', '/entrar', '/acesso']
       const isLoginUrl = loginUrlIndicators.some(indicator =>
         finalUrl.toLowerCase().includes(indicator)
       )
 
-      // Verificar se o conteúdo da página indica login
-      const pageContent = await page.content()
-      const loginContentIndicators = ['login', 'signin', 'sign in', 'password', 'senha', 'entrar', 'autenticar']
-      const hasLoginContent = loginContentIndicators.some(indicator =>
-        pageContent.toLowerCase().includes(indicator)
-      )
-
-      if (isLoginUrl || hasLoginContent) {
+      // Se URL indica login, não precisa verificar conteúdo
+      if (isLoginUrl) {
         console.error(`[Auditor] Redirected to login page: ${url} -> ${finalUrl}`)
+        await browser.close()
+        return {
+          url,
+          violations: [],
+          loadTime,
+          error: `Redirecionado para login (${finalUrl}). A autenticação pode não estar funcionando.`,
+          errorType: 'http_error',
+          httpStatus: 302,
+        }
+      }
+
+      // Se não é URL de login, verificar se tem formulário de login visível
+      // (mais preciso que apenas procurar texto "password")
+      const hasLoginForm = await page.evaluate(() => {
+        // Verificar se existe input type=password visível
+        const passwordInputs = document.querySelectorAll('input[type="password"]')
+        for (const input of passwordInputs) {
+          const rect = input.getBoundingClientRect()
+          if (rect.width > 0 && rect.height > 0) {
+            return true // Tem campo de senha visível
+          }
+        }
+        return false
+      })
+
+      if (hasLoginForm) {
+        console.error(`[Auditor] Redirected to page with login form: ${url} -> ${finalUrl}`)
         await browser.close()
         return {
           url,

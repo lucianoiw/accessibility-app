@@ -173,6 +173,25 @@ export const testAuthTask = task({
       extraHTTPHeaders['Authorization'] = `Bearer ${authConfig.token}`
     }
 
+    // Headers extras do curl_import (filtrar headers problemáticos)
+    if (authConfig?.type === 'curl_import' && authConfig.extraHeaders) {
+      const skipHeaders = [
+        'cookie', 'host', 'content-length', 'connection',
+        'accept-encoding', 'origin', 'referer',
+        'if-modified-since', 'if-none-match', 'cache-control',
+      ]
+      for (const [key, value] of Object.entries(authConfig.extraHeaders)) {
+        if (!skipHeaders.includes(key.toLowerCase())) {
+          extraHTTPHeaders[key] = value
+        }
+      }
+    }
+
+    // User-Agent customizado do curl_import
+    const customUserAgent = authConfig?.type === 'curl_import' && authConfig.userAgent
+      ? authConfig.userAgent
+      : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
     let browser = null
     let requestTracker: RequestTracker | null = null
 
@@ -190,18 +209,22 @@ export const testAuthTask = task({
         ],
       })
       const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        userAgent: customUserAgent,
         extraHTTPHeaders,
         viewport: { width: 1280, height: 720 },
         bypassCSP: true, // Alinhado com auditor.ts
       })
 
-      // Injetar cookies se configurado
+      // Injetar cookies se configurado (cookie ou curl_import)
       let cookiesInjected = 0
       let cookieDomain = ''
       const cookieNames: string[] = []
 
-      if (authConfig?.type === 'cookie' && authConfig.cookies) {
+      const cookieString = authConfig?.type === 'cookie' ? authConfig.cookies
+        : authConfig?.type === 'curl_import' ? authConfig.cookies
+        : null
+
+      if (cookieString) {
         const parsedUrl = new URL(baseUrl)
         const isSecure = parsedUrl.protocol === 'https:'
 
@@ -211,7 +234,7 @@ export const testAuthTask = task({
 
         console.log(`[Auth Test] Cookie domain: ${cookieDomain}`)
 
-        const cookiePairs = authConfig.cookies.split(';').map(c => c.trim()).filter(Boolean)
+        const cookiePairs = cookieString.split(';').map(c => c.trim()).filter(Boolean)
         const cookiesToSet = cookiePairs.map(pair => {
           const eqIndex = pair.indexOf('=')
           const name = pair.substring(0, eqIndex).trim()

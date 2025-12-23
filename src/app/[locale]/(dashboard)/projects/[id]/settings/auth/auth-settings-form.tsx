@@ -14,9 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import type { Project, AuthType, AuthConfig } from '@/types'
 import { updateAuthSettings } from '../actions'
+import { parseCurl, type ParsedCurl } from '@/lib/curl-parser'
 
 interface Props {
   project: Project
@@ -43,14 +44,51 @@ export function AuthSettingsForm({ project }: Props) {
   const [authType, setAuthType] = useState<AuthType>(project.auth_config?.type || 'none')
   const [token, setToken] = useState(project.auth_config?.token || '')
   const [cookies, setCookies] = useState(project.auth_config?.cookies || '')
+  const [curlCommand, setCurlCommand] = useState('')
+  const [parsedCurl, setParsedCurl] = useState<ParsedCurl | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isTesting, setIsTesting] = useState(false)
   const [testResult, setTestResult] = useState<TestResult | null>(null)
+
+  // Parse cURL quando o comando muda
+  function handleCurlChange(value: string) {
+    setCurlCommand(value)
+    if (value.trim().startsWith('curl')) {
+      try {
+        const parsed = parseCurl(value)
+        setParsedCurl(parsed)
+      } catch {
+        setParsedCurl(null)
+      }
+    } else {
+      setParsedCurl(null)
+    }
+  }
 
   function getAuthConfig(): AuthConfig | null {
     if (authType === 'none') return null
     if (authType === 'bearer') return { type: 'bearer', token: token || undefined }
     if (authType === 'cookie') return { type: 'cookie', cookies: cookies || undefined }
+    if (authType === 'curl_import') {
+      // Usar dados do novo cURL parseado, ou fallback para dados salvos
+      if (parsedCurl) {
+        return {
+          type: 'curl_import',
+          cookies: parsedCurl.cookieString || undefined,
+          extraHeaders: parsedCurl.headers,
+          userAgent: parsedCurl.userAgent || undefined,
+        }
+      }
+      // Usar dados salvos anteriormente
+      if (project.auth_config?.type === 'curl_import') {
+        return {
+          type: 'curl_import',
+          cookies: project.auth_config.cookies,
+          extraHeaders: project.auth_config.extraHeaders,
+          userAgent: project.auth_config.userAgent,
+        }
+      }
+    }
     return null
   }
 
@@ -91,10 +129,11 @@ export function AuthSettingsForm({ project }: Props) {
     })
   }
 
-  const authTypeDescriptions = useMemo(() => ({
+  const authTypeDescriptions: Record<AuthType, string> = useMemo(() => ({
     none: t('authNoneDescription'),
     bearer: t('authBearerDescription'),
     cookie: t('authCookieDescription'),
+    curl_import: t('authCurlImportDescription'),
   }), [t])
 
   return (
@@ -121,6 +160,7 @@ export function AuthSettingsForm({ project }: Props) {
                 <SelectItem value="none">{t('authNone')}</SelectItem>
                 <SelectItem value="bearer">{t('authBearer')}</SelectItem>
                 <SelectItem value="cookie">{t('authCookie')}</SelectItem>
+                <SelectItem value="curl_import">{t('authCurlImport')}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
@@ -163,6 +203,79 @@ export function AuthSettingsForm({ project }: Props) {
               <p className="text-sm text-muted-foreground">
                 {t('cookiesHelp')}
               </p>
+            </div>
+          )}
+
+          {/* cURL Import fields */}
+          {authType === 'curl_import' && (
+            <div className="space-y-4">
+              {/* Mostrar configuração salva anteriormente */}
+              {project.auth_config?.type === 'curl_import' && !parsedCurl && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-md space-y-2 text-sm border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="font-medium">Configuração atual salva:</span>
+                  </div>
+                  <div className="grid gap-1 text-muted-foreground">
+                    <p><span className="font-medium">Cookies:</span> {project.auth_config.cookies ? project.auth_config.cookies.split(';').length : 0} configurados</p>
+                    <p><span className="font-medium">Headers:</span> {project.auth_config.extraHeaders ? Object.keys(project.auth_config.extraHeaders).length : 0} configurados</p>
+                    {project.auth_config.userAgent && (
+                      <p><span className="font-medium">User-Agent:</span> {project.auth_config.userAgent.substring(0, 50)}...</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                    Cole um novo cURL abaixo para atualizar a configuração.
+                  </p>
+                  {/* Hidden inputs para manter dados salvos se não houver novo cURL */}
+                  <input type="hidden" name="cookies" value={project.auth_config.cookies || ''} />
+                  <input type="hidden" name="extra_headers" value={JSON.stringify(project.auth_config.extraHeaders || {})} />
+                  <input type="hidden" name="user_agent" value={project.auth_config.userAgent || ''} />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="curl_command">{t('curlCommand')}</Label>
+                <Textarea
+                  id="curl_command"
+                  name="curl_command"
+                  value={curlCommand}
+                  onChange={(e) => handleCurlChange(e.target.value)}
+                  placeholder={t('curlCommandPlaceholder')}
+                  className="font-mono text-xs min-h-[150px]"
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t('curlCommandHelp')}
+                </p>
+              </div>
+
+              {/* Parsed cURL info (novo) */}
+              {parsedCurl && parsedCurl.url && (
+                <div className="p-3 bg-muted rounded-md space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="font-medium">{t('curlParsedSuccess')}</span>
+                  </div>
+                  <div className="grid gap-1 text-muted-foreground">
+                    <p><span className="font-medium">URL:</span> {parsedCurl.url}</p>
+                    <p><span className="font-medium">Cookies:</span> {Object.keys(parsedCurl.cookies).length} encontrados</p>
+                    <p><span className="font-medium">Headers:</span> {Object.keys(parsedCurl.headers).length} encontrados</p>
+                    {parsedCurl.userAgent && (
+                      <p><span className="font-medium">User-Agent:</span> {parsedCurl.userAgent.substring(0, 50)}...</p>
+                    )}
+                  </div>
+                  {/* Hidden inputs para enviar os dados parseados */}
+                  <input type="hidden" name="cookies" value={parsedCurl.cookieString} />
+                  <input type="hidden" name="extra_headers" value={JSON.stringify(parsedCurl.headers)} />
+                  <input type="hidden" name="user_agent" value={parsedCurl.userAgent || ''} />
+                </div>
+              )}
+
+              {curlCommand && !parsedCurl?.url && (
+                <div className="p-3 bg-red-50 dark:bg-red-950 rounded-md flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{t('curlParseError')}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -226,7 +339,7 @@ export function AuthSettingsForm({ project }: Props) {
                   <p>Título: {testResult.pageTitle}</p>
                 )}
                 <p>
-                  Auth: {testResult.authUsed === 'bearer' ? 'Bearer Token' : testResult.authUsed === 'cookie' ? 'Cookies' : 'Nenhum'}
+                  Auth: {testResult.authUsed === 'bearer' ? 'Bearer Token' : testResult.authUsed === 'cookie' ? 'Cookies' : testResult.authUsed === 'curl_import' ? 'cURL Import' : 'Nenhum'}
                   {testResult.cookiesInjected ? ` (${testResult.cookiesInjected} cookies)` : ''}
                 </p>
               </div>

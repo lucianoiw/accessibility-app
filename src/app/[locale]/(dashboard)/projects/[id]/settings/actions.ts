@@ -106,6 +106,8 @@ export async function updateAuthSettings(
   const authType = formData.get('auth_type') as string
   const token = formData.get('token') as string
   const cookies = formData.get('cookies') as string
+  const extraHeadersJson = formData.get('extra_headers') as string
+  const userAgent = formData.get('user_agent') as string
 
   let authConfig: AuthConfig | null = null
 
@@ -119,6 +121,24 @@ export async function updateAuthSettings(
       return { error: 'Cookies são obrigatórios para autenticação por Cookie' }
     }
     authConfig = { type: 'cookie', cookies: cookies.trim() }
+  } else if (authType === 'curl_import') {
+    if (!cookies?.trim()) {
+      return { error: 'Importe um comando cURL válido com cookies' }
+    }
+    let extraHeaders: Record<string, string> | undefined
+    if (extraHeadersJson?.trim()) {
+      try {
+        extraHeaders = JSON.parse(extraHeadersJson)
+      } catch {
+        return { error: 'Headers inválidos no cURL importado' }
+      }
+    }
+    authConfig = {
+      type: 'curl_import',
+      cookies: cookies.trim(),
+      extraHeaders,
+      userAgent: userAgent?.trim() || undefined,
+    }
   } else {
     authConfig = { type: 'none' }
   }

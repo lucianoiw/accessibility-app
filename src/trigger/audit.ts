@@ -150,6 +150,14 @@ export const runAuditTask = task({
     const { auditId, projectId, discoveryMethod, discoveryConfig, wcagLevels, includeAbnt, includeEmag, includeCoga, includeWcagPartial, authConfig, subdomainPolicy, allowedSubdomains } = payload
     const supabase = createAdminClient()
 
+    // Log do authConfig para debug
+    logger.info('Auth config recebido', {
+      authType: authConfig?.type || 'none',
+      hasCookies: !!(authConfig && 'cookies' in authConfig && authConfig.cookies),
+      hasExtraHeaders: !!(authConfig && 'extraHeaders' in authConfig && authConfig.extraHeaders),
+      hasUserAgent: !!(authConfig && 'userAgent' in authConfig && authConfig.userAgent),
+    })
+
     // Verificar se Playwright está disponível
     try {
       const { chromium } = await import('playwright')

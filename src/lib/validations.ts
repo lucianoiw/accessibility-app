@@ -120,6 +120,21 @@ export const AuthConfigSchema = z.discriminatedUnion('type', [
         'Cookies não podem conter quebras de linha'
       ),
   }),
+  z.object({
+    type: z.literal('curl_import'),
+    // Cookies extraídos do cURL
+    cookies: z.string()
+      .max(8192, 'Cookies muito longos (max 8KB)')
+      .refine(
+        (val) => !/[\r\n]/.test(val),
+        'Cookies não podem conter quebras de linha'
+      )
+      .optional(),
+    // Headers extras extraídos do cURL
+    extraHeaders: z.record(z.string(), z.string()).optional(),
+    // User-Agent extraído do cURL
+    userAgent: z.string().max(512, 'User-Agent muito longo').optional(),
+  }),
 ])
 
 export type AuthConfigInput = z.infer<typeof AuthConfigSchema>

@@ -27,7 +27,7 @@ export type ReportType = 'executive_pdf' | 'technical_pdf' | 'csv' | 'json'
 
 export type ReportStatus = 'pending' | 'generating' | 'completed' | 'failed'
 
-export type AuthType = 'none' | 'bearer' | 'cookie'
+export type AuthType = 'none' | 'bearer' | 'cookie' | 'curl_import'
 
 export type SubdomainPolicy = 'main_only' | 'all_subdomains' | 'specific'
 
@@ -124,6 +124,9 @@ export interface AuthConfig {
   token?: string
   // Cookie Auth
   cookies?: string // formato: "name1=value1; name2=value2"
+  // cURL Import - headers extras capturados do browser
+  extraHeaders?: Record<string, string>
+  userAgent?: string
   // Futuro: Basic Auth
   // username?: string
   // password?: string
